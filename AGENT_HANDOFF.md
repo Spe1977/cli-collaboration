@@ -1,11 +1,11 @@
 # AGENT_HANDOFF.md
 
-**Last updated:** 2026-05-20T00:35:00+02:00
+**Last updated:** 2026-05-20T10:30:00+02:00
 **Last agent:** Claude Code
 **Status:** done
 
 ## Current task
-Added `CONTRIBUTORS.md` to credit the multi-agent collaboration (user supersession: Codex out of context budget for the requested follow-up). Closing review pass for the v2.2 release cycle.
+Repo hygiene: untracked `analisi.md`, `final-skill.md`, `workflow.md` from Git and added them to `.gitignore` so they remain only as local design notes. User supersession applied for two ownership boundaries: (a) `.gitignore` is Codex-owned but user explicitly authorized the edit; (b) `final-skill.md` and `workflow.md` are user-reserved — the user explicitly reassigned them for this single untracking action (no content was touched).
 
 ## Current state
 - The project is fully bootstrapped, with all Phase 1 (Codex), Phase 2 (Claude), and Phase 3 (Gemini) deliverables implemented.
@@ -65,12 +65,13 @@ Added `CONTRIBUTORS.md` to credit the multi-agent collaboration (user supersessi
 No frozen files currently declared.
 
 ## Files changed this shift
-- CONTRIBUTORS.md: Added (new). Records human + AI multi-agent contribution since GitHub contributors view cannot credit non-account identities.
-- AGENT_HANDOFF.md: Recorded CONTRIBUTORS.md creation, added closing Claude review entry, refreshed open concerns.
+- .gitignore: Added `analisi.md`, `final-skill.md`, `workflow.md` so the internal design notes stay local-only.
+- analisi.md, final-skill.md, workflow.md: Removed from Git index (`git rm --cached`); files preserved on disk and now ignored.
+- AGENT_HANDOFF.md: End-of-shift update with supersession note and untracking record.
 
 ## Tests
-- Red: none — documentation-only shift.
-- Green: `run-tests.sh` fixture suite (7/7); `check-ownership.sh --handoff AGENT_HANDOFF.md --agent Claude CONTRIBUTORS.md` exit 0; `git status --short --branch`.
+- Red: none — repo-hygiene shift, no logic changes.
+- Green: `git check-ignore -v analisi.md final-skill.md workflow.md` confirms all three are ignored via `.gitignore`; local files still present (`ls` verified).
 - Expected non-green: none currently.
 
 ## Open concerns
@@ -88,6 +89,7 @@ No immediate repository action remains. Optional next steps: add a release tag, 
 Do not touch: `final-skill.md`, `workflow.md`, or `progetti-1-2.md` unless the user explicitly reassigns them.
 
 ## History
+- 2026-05-20T10:30 - Claude Code: Untracked internal design notes (`analisi.md`, `final-skill.md`, `workflow.md`) from Git; added them to `.gitignore`. User supersession over Codex-owned `.gitignore` and user-reserved design notes. Files preserved locally. (done)
 - 2026-05-20T00:35 - Claude Code: Closing review pass — added CONTRIBUTORS.md crediting human + AI multi-agent collaboration (user supersession; Codex out of context); verified 7/7 fixtures; surfaced residual local backup as open concern. (done)
 - 2026-05-20T00:13 - Codex CLI: Pushed main to the dedicated GitHub repository Spe1977/cli-collaboration. (done)
 - 2026-05-20T00:12 - Codex CLI: Added README_IT.md, merged GitHub MIT license commit, and prepared origin/main push. (done)
