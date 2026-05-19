@@ -1,11 +1,11 @@
 # AGENT_HANDOFF.md
 
-**Last updated:** 2026-05-19T23:48:00+02:00
-**Last agent:** Gemini CLI
+**Last updated:** 2026-05-19T23:51:36+02:00
+**Last agent:** Codex CLI
 **Status:** done
 
 ## Current task
-Verified Codex's Git baseline, skill synchronization across all targets (Codex/Agents/Gemini), and updated GEMINI.md wording. Confirmed the project is in a stable v2.2 state.
+Installed the committed v2.2 skill package into the explicit Claude target (`~/.claude/skills/cli-collaboration`) after Claude identified drift there.
 
 ## Current state
 - The project is fully bootstrapped, with all Phase 1 (Codex), Phase 2 (Claude), and Phase 3 (Gemini) deliverables implemented.
@@ -16,7 +16,7 @@ Verified Codex's Git baseline, skill synchronization across all targets (Codex/A
 - Codex post-completion verification completed on 2026-05-19T23:31:25+02:00.
 - `README.md` was updated to remove stale "later phases" wording now that Claude/Gemini deliverables exist.
 - `evals/evals.json` was updated from `0.1.0-phase1` / `technical-wiring` to `0.1.0` / `tri-cli-complete`.
-- Default installed targets are current: `sync-skill.sh` reports `ok` for `/home/leospe/.codex/skills/cli-collaboration` and `/home/leospe/.agents/skills/cli-collaboration`; `diff -qr` reports no differences for `/home/leospe/.gemini/skills/cli-collaboration`.
+- Installed targets are current: `sync-skill.sh` reports `ok` for `/home/leospe/.codex/skills/cli-collaboration` and `/home/leospe/.agents/skills/cli-collaboration`; `diff -qr` reports no differences for `/home/leospe/.gemini/skills/cli-collaboration` or `/home/leospe/.claude/skills/cli-collaboration`.
 - `README.md` now includes a synthesis of `workflow.md`: task-fit bootstrap, handoff-first flow, single-LLM cross-session use, filesystem-based pause/resume, and the Codex/Claude/Gemini ownership split.
 - Claude reviewed `README.md` semantically without editing it, respecting Codex ownership.
 - Codex accepted and implemented Claude review items R1-R6: neutral CLI loading wording, clearer final verification wording, more reproducible release-gate wording, canonical single-agent phrasing, sharper destructive-assertion wording, and a maintenance/update section.
@@ -56,15 +56,15 @@ Verified Codex's Git baseline, skill synchronization across all targets (Codex/A
 No frozen files currently declared.
 
 ## Files changed this shift
-- AGENT_HANDOFF.md: Recorded baseline commit and install-target synchronization.
+- AGENT_HANDOFF.md: Recorded explicit Claude target synchronization.
 
 ## Tests
 - Red: none intentional for this operational follow-up.
-- Green: `run-tests.sh` fixture suite (7/7); `quick_validate.py skills/cli-collaboration`; `git status --short --branch`; `sync-skill.sh` after install; `diff -qr skills/cli-collaboration /home/leospe/.gemini/skills/cli-collaboration`.
+- Green: `diff -qr skills/cli-collaboration /home/leospe/.claude/skills/cli-collaboration`; `sync-skill.sh`; `diff -qr skills/cli-collaboration /home/leospe/.gemini/skills/cli-collaboration`.
 - Expected non-green: none currently.
 
 ## Open concerns
-- The source package and live Codex/agents/Gemini install targets are aligned as of 2026-05-19T23:43:02+02:00.
+- The source package and live Codex/agents/Claude/Gemini install targets are aligned as of 2026-05-19T23:51:36+02:00.
 - No backup script was added; `.gitignore` reserves `.handoff-backups/` so a future lightweight backup guardrail can be introduced without diff noise.
 
 ## Next agent starts from
@@ -75,6 +75,7 @@ Choose the next project or maintenance task. If this repository should be publis
 Do not touch: `final-skill.md`, `workflow.md`, or `progetti-1-2.md` unless the user explicitly reassigns them.
 
 ## History
+- 2026-05-19T23:51 - Codex CLI: Installed committed v2.2 package into the explicit Claude target and verified all four install targets aligned. (done)
 - 2026-05-19T23:48 - Gemini CLI: Verified Git baseline, cross-agent skill sync, and GEMINI.md cleanup. Confirmed v2.2 stability. (done)
 - 2026-05-19T23:43 - Codex CLI: Created baseline commit e7bd2e7 and synchronized Codex/agents/Gemini install targets. (done)
 - 2026-05-19T23:37 - Codex CLI: Applied Claude README review items R7-R12 and re-ran README/skill checks. (done)
