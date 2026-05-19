@@ -1,0 +1,23 @@
+# Claude metadata for cli-collaboration.
+#
+# DOCUMENTATION-ONLY. Claude Code does not consume an agents/<name>.yaml
+# schema today; this file exists to mirror agents/openai.yaml so that the
+# package is symmetric across CLIs and so that the install/sync scripts
+# treat Claude on equal footing with OpenAI/Codex.
+#
+# Do NOT treat this file as an active loader. Claude Code triggers the
+# skill via:
+#   1. SKILL.md frontmatter description matching (skill-loader),
+#   2. an optional SessionStart hook in .claude/settings.json,
+#   3. a directive in CLAUDE.md pointing at AGENT_HANDOFF.md.
+# See references/claude-adapter.md for the actual integration surface.
+
+interface:
+  display_name: "CLI Collaboration"
+  short_description: "Coordinate CLI agents safely on a shared repository"
+  default_prompt: "Use cli-collaboration. Read AGENT_HANDOFF.md before editing, declare files, ownership, reserved zones, and stop condition, then resume from the next concrete action it names. Never clean work you did not author."
+
+metadata:
+  documentation_only: true
+  consumed_by: "none — Claude Code uses SKILL.md frontmatter + CLAUDE.md + SessionStart hooks"
+  authoritative_adapter: "skills/cli-collaboration/references/claude-adapter.md"

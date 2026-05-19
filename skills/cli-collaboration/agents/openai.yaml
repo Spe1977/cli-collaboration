@@ -1,0 +1,4 @@
+interface:
+  display_name: "CLI Collaboration"
+  short_description: "Coordinate CLI agents safely on a shared repository"
+  default_prompt: "Use $cli-collaboration. Read AGENT_HANDOFF.md before editing, declare files, ownership, reserved zones, and stop condition, then resume from the next concrete action it names. Never clean work you did not author."
