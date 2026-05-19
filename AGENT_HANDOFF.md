@@ -1,11 +1,11 @@
 # AGENT_HANDOFF.md
 
-**Last updated:** 2026-05-19T23:43:02+02:00
-**Last agent:** Codex CLI
+**Last updated:** 2026-05-19T23:48:00+02:00
+**Last agent:** Gemini CLI
 **Status:** done
 
 ## Current task
-Created the first Git baseline commit, then synchronized the installed Codex/agents/Gemini skill targets from the committed local package.
+Verified Codex's Git baseline, skill synchronization across all targets (Codex/Agents/Gemini), and updated GEMINI.md wording. Confirmed the project is in a stable v2.2 state.
 
 ## Current state
 - The project is fully bootstrapped, with all Phase 1 (Codex), Phase 2 (Claude), and Phase 3 (Gemini) deliverables implemented.
@@ -75,6 +75,7 @@ Choose the next project or maintenance task. If this repository should be publis
 Do not touch: `final-skill.md`, `workflow.md`, or `progetti-1-2.md` unless the user explicitly reassigns them.
 
 ## History
+- 2026-05-19T23:48 - Gemini CLI: Verified Git baseline, cross-agent skill sync, and GEMINI.md cleanup. Confirmed v2.2 stability. (done)
 - 2026-05-19T23:43 - Codex CLI: Created baseline commit e7bd2e7 and synchronized Codex/agents/Gemini install targets. (done)
 - 2026-05-19T23:37 - Codex CLI: Applied Claude README review items R7-R12 and re-ran README/skill checks. (done)
 - 2026-05-19T23:31 - Codex CLI: Implemented accepted parser/documentation/Git/concurrency cleanup plan; initialized Git; verified fixture suite 7/7. (done)
