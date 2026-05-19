@@ -1,11 +1,11 @@
 # AGENT_HANDOFF.md
 
-**Last updated:** 2026-05-19T23:55:10+02:00
+**Last updated:** 2026-05-20T00:10:09+02:00
 **Last agent:** Codex CLI
 **Status:** done
 
 ## Current task
-Moved install backups out of skill discovery paths after Claude observed that `cli-collaboration.backup.*` directories were still loadable as duplicate skills.
+Added Italian README translation for the new dedicated GitHub repository and refreshed README release-readiness wording now that the v2.2 baseline is committed.
 
 ## Current state
 - The project is fully bootstrapped, with all Phase 1 (Codex), Phase 2 (Claude), and Phase 3 (Gemini) deliverables implemented.
@@ -25,6 +25,7 @@ Moved install backups out of skill discovery paths after Claude observed that `c
 - Concurrency policy remains procedural in v2.2: one active writer for `AGENT_HANDOFF.md`; flock-based locking is promoted only after a documented concurrent-write incident.
 - `README.md` now exposes the single-writer policy in Core Protocol, Gemini forced activation in Activation And Pause, the stricter exit code 2 semantics, `.gitignore` ownership, parser fixture coverage beyond scenarios A-F, and a single-level glob ownership example.
 - Backup directories were moved from each CLI's `skills/` directory into sibling `skills-backups/` directories so only the definitive v2.2 skill remains discoverable.
+- `README_IT.md` was added as the Italian translation of `README.md`, with current Git publication steps reflected in both README files.
 
 ## File ownership
 ### agent-owned
@@ -36,6 +37,7 @@ Moved install backups out of skill discovery paths after Claude observed that `c
 - skills/cli-collaboration/references/codex-adapter.md: Codex — Codex-specific adapter notes and script ABI
 - examples/AGENTS.md: Codex — Codex/AGENTS project guidance example
 - README.md: Codex — package entry point, install commands, release gates
+- README_IT.md: Codex — Italian package entry point translation
 - .gitignore: Codex — repository hygiene for local guardrail artifacts
 - skills/cli-collaboration/references/handoff-template.md: Claude — canonical human handoff template
 - skills/cli-collaboration/references/handoff-anti-patterns.md: Claude — semantic failure modes
@@ -57,26 +59,30 @@ Moved install backups out of skill discovery paths after Claude observed that `c
 No frozen files currently declared.
 
 ## Files changed this shift
-- AGENT_HANDOFF.md: Recorded backup cleanup outside skill discovery paths.
+- README.md: Added `README_IT.md` to the package tree and updated release-readiness wording for the committed baseline.
+- README_IT.md: Added Italian translation of the README.
+- AGENT_HANDOFF.md: Recorded README_IT addition and publication-prep state.
 
 ## Tests
-- Red: none intentional for this operational follow-up.
-- Green: `find .../skills -name 'cli-collaboration.backup.*'` returns no backup directories; backups are present under `skills-backups/`; `sync-skill.sh`; `diff -qr skills/cli-collaboration /home/leospe/.claude/skills/cli-collaboration`; `diff -qr skills/cli-collaboration /home/leospe/.gemini/skills/cli-collaboration`.
+- Red: none intentional for this documentation follow-up.
+- Green: `rg` check for README/README_IT publication wording; `quick_validate.py skills/cli-collaboration`; `run-tests.sh` fixture suite (7/7).
 - Expected non-green: none currently.
 
 ## Open concerns
 - The source package and live Codex/agents/Claude/Gemini install targets are aligned as of 2026-05-19T23:51:36+02:00.
 - Install backups are preserved outside discovery paths: `/home/leospe/.codex/skills-backups`, `/home/leospe/.agents/skills-backups`, `/home/leospe/.claude/skills-backups`, `/home/leospe/.gemini/skills-backups`.
 - No backup script was added; `.gitignore` reserves `.handoff-backups/` so a future lightweight handoff backup guardrail can be introduced without diff noise.
+- Remote GitHub repository provided by the user: `https://github.com/Spe1977/cli-collaboration.git`. Push is pending after commit.
 
 ## Next agent starts from
 **Next agent: User.**
 
-Choose the next project or maintenance task. If this repository should be published remotely, add a remote and push `master`.
+Add the GitHub remote if missing and push `master` to `https://github.com/Spe1977/cli-collaboration.git`.
 
 Do not touch: `final-skill.md`, `workflow.md`, or `progetti-1-2.md` unless the user explicitly reassigns them.
 
 ## History
+- 2026-05-20T00:10 - Codex CLI: Added README_IT.md translation and refreshed README publication wording before GitHub push. (done)
 - 2026-05-19T23:55 - Codex CLI: Moved cli-collaboration backup directories out of skill discovery paths into skills-backups. (done)
 - 2026-05-19T23:51 - Codex CLI: Installed committed v2.2 package into the explicit Claude target and verified all four install targets aligned. (done)
 - 2026-05-19T23:48 - Gemini CLI: Verified Git baseline, cross-agent skill sync, and GEMINI.md cleanup. Confirmed v2.2 stability. (done)
