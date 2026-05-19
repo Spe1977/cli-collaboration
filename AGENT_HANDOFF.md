@@ -1,11 +1,11 @@
 # AGENT_HANDOFF.md
 
-**Last updated:** 2026-05-20T00:13:54+02:00
-**Last agent:** Codex CLI
+**Last updated:** 2026-05-20T00:35:00+02:00
+**Last agent:** Claude Code
 **Status:** done
 
 ## Current task
-Published the dedicated `Spe1977/cli-collaboration` repository with the English README, Italian README, MIT license, and complete v2.2 skill package.
+Added `CONTRIBUTORS.md` to credit the multi-agent collaboration (user supersession: Codex out of context budget for the requested follow-up). Closing review pass for the v2.2 release cycle.
 
 ## Current state
 - The project is fully bootstrapped, with all Phase 1 (Codex), Phase 2 (Claude), and Phase 3 (Gemini) deliverables implemented.
@@ -29,6 +29,7 @@ Published the dedicated `Spe1977/cli-collaboration` repository with the English 
 - Remote `origin` is set to `https://github.com/Spe1977/cli-collaboration.git`; the local branch was renamed to `main` to match GitHub.
 - The GitHub `LICENSE` commit was merged locally with `chore: merge GitHub repository license`.
 - `main` was pushed successfully to `https://github.com/Spe1977/cli-collaboration.git` at commit `2c9ad1f`.
+- `CONTRIBUTORS.md` added to credit human + AI agent collaboration explicitly, since GitHub's contributors view can only credit committer accounts (no AI identities). Git authorship remains unfalsified.
 
 ## File ownership
 ### agent-owned
@@ -43,6 +44,7 @@ Published the dedicated `Spe1977/cli-collaboration` repository with the English 
 - README_IT.md: Codex — Italian package entry point translation
 - LICENSE: user/GitHub — MIT license generated during repository creation
 - .gitignore: Codex — repository hygiene for local guardrail artifacts
+- CONTRIBUTORS.md: Claude — multi-agent contribution record
 - skills/cli-collaboration/references/handoff-template.md: Claude — canonical human handoff template
 - skills/cli-collaboration/references/handoff-anti-patterns.md: Claude — semantic failure modes
 - skills/cli-collaboration/references/validation-scenarios.md: Claude — textual scenarios A-F and negative asserts
@@ -63,27 +65,30 @@ Published the dedicated `Spe1977/cli-collaboration` repository with the English 
 No frozen files currently declared.
 
 ## Files changed this shift
-- AGENT_HANDOFF.md: Recorded successful push to the dedicated GitHub repository.
+- CONTRIBUTORS.md: Added (new). Records human + AI multi-agent contribution since GitHub contributors view cannot credit non-account identities.
+- AGENT_HANDOFF.md: Recorded CONTRIBUTORS.md creation, added closing Claude review entry, refreshed open concerns.
 
 ## Tests
-- Red: none intentional for this documentation follow-up.
-- Green: `rg` check for README/README_IT publication wording; `quick_validate.py skills/cli-collaboration`; `run-tests.sh` fixture suite (7/7); `git fetch origin main`; merge of `origin/main` preserving `LICENSE`; `git push origin main`.
+- Red: none — documentation-only shift.
+- Green: `run-tests.sh` fixture suite (7/7); `check-ownership.sh --handoff AGENT_HANDOFF.md --agent Claude CONTRIBUTORS.md` exit 0; `git status --short --branch`.
 - Expected non-green: none currently.
 
 ## Open concerns
 - The source package and live Codex/agents/Claude/Gemini install targets are aligned as of 2026-05-19T23:51:36+02:00.
 - Install backups are preserved outside discovery paths: `/home/leospe/.codex/skills-backups`, `/home/leospe/.agents/skills-backups`, `/home/leospe/.claude/skills-backups`, `/home/leospe/.gemini/skills-backups`.
 - No backup script was added; `.gitignore` reserves `.handoff-backups/` so a future lightweight handoff backup guardrail can be introduced without diff noise.
-- GitHub publication is complete; this handoff records the publication shift.
+- A residual pre-cycle backup directory `~/.claude/skills/cli-collaboration.bak-20260518T002954Z` exists on Claude's local install path from a prior session. The skill loader does not pick it up, so it is non-blocking; user can move it to `~/.claude/skills-backups/` or delete it at convenience. Not pushed (local-only artifact).
+- An Italian translation `CONTRIBUTORS_IT.md` is not provided; can be added later for symmetry with `README_IT.md` if the user wants it.
 
 ## Next agent starts from
 **Next agent: User.**
 
-No immediate repository action remains. Optional next steps: add a release tag, add GitHub topics, or start the next project.
+No immediate repository action remains. Optional next steps: add a release tag, add GitHub topics, add `CONTRIBUTORS_IT.md` for Italian symmetry, clean the residual `cli-collaboration.bak-20260518T002954Z` on Claude's local install path, or start the next project.
 
 Do not touch: `final-skill.md`, `workflow.md`, or `progetti-1-2.md` unless the user explicitly reassigns them.
 
 ## History
+- 2026-05-20T00:35 - Claude Code: Closing review pass — added CONTRIBUTORS.md crediting human + AI multi-agent collaboration (user supersession; Codex out of context); verified 7/7 fixtures; surfaced residual local backup as open concern. (done)
 - 2026-05-20T00:13 - Codex CLI: Pushed main to the dedicated GitHub repository Spe1977/cli-collaboration. (done)
 - 2026-05-20T00:12 - Codex CLI: Added README_IT.md, merged GitHub MIT license commit, and prepared origin/main push. (done)
 - 2026-05-20T00:10 - Codex CLI: Added README_IT.md translation and refreshed README publication wording before GitHub push. (done)
