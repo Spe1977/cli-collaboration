@@ -1,11 +1,11 @@
 # AGENT_HANDOFF.md
 
-**Last updated:** 2026-05-19T23:37:53+02:00
+**Last updated:** 2026-05-19T23:43:02+02:00
 **Last agent:** Codex CLI
 **Status:** done
 
 ## Current task
-Applied Claude's README review items R7-R12 to close the remaining README-level gaps after the parser/Git/concurrency cleanup shift.
+Created the first Git baseline commit, then synchronized the installed Codex/agents/Gemini skill targets from the committed local package.
 
 ## Current state
 - The project is fully bootstrapped, with all Phase 1 (Codex), Phase 2 (Claude), and Phase 3 (Gemini) deliverables implemented.
@@ -16,11 +16,11 @@ Applied Claude's README review items R7-R12 to close the remaining README-level 
 - Codex post-completion verification completed on 2026-05-19T23:31:25+02:00.
 - `README.md` was updated to remove stale "later phases" wording now that Claude/Gemini deliverables exist.
 - `evals/evals.json` was updated from `0.1.0-phase1` / `technical-wiring` to `0.1.0` / `tri-cli-complete`.
-- Default installed targets are not current: `sync-skill.sh` reports drift for `/home/leospe/.codex/skills/cli-collaboration` and `/home/leospe/.agents/skills/cli-collaboration`; `/home/leospe/.gemini/skills/cli-collaboration` also differs from the local package. This verification did not install or overwrite those directories.
+- Default installed targets are current: `sync-skill.sh` reports `ok` for `/home/leospe/.codex/skills/cli-collaboration` and `/home/leospe/.agents/skills/cli-collaboration`; `diff -qr` reports no differences for `/home/leospe/.gemini/skills/cli-collaboration`.
 - `README.md` now includes a synthesis of `workflow.md`: task-fit bootstrap, handoff-first flow, single-LLM cross-session use, filesystem-based pause/resume, and the Codex/Claude/Gemini ownership split.
 - Claude reviewed `README.md` semantically without editing it, respecting Codex ownership.
 - Codex accepted and implemented Claude review items R1-R6: neutral CLI loading wording, clearer final verification wording, more reproducible release-gate wording, canonical single-agent phrasing, sharper destructive-assertion wording, and a maintenance/update section.
-- `git init` was run successfully after adding `.gitignore`; the repository has no commits yet and all package files are currently untracked.
+- Git baseline commit created: `e7bd2e7 feat: cli-collaboration v2.2 baseline`.
 - `check-ownership.sh` now requires all three ownership headings, normalizes common dash variants in ownership lines, and keeps recursive `**` globs out of the v2.2 contract.
 - Concurrency policy remains procedural in v2.2: one active writer for `AGENT_HANDOFF.md`; flock-based locking is promoted only after a documented concurrent-write incident.
 - `README.md` now exposes the single-writer policy in Core Protocol, Gemini forced activation in Activation And Pause, the stricter exit code 2 semantics, `.gitignore` ownership, parser fixture coverage beyond scenarios A-F, and a single-level glob ownership example.
@@ -56,27 +56,26 @@ Applied Claude's README review items R7-R12 to close the remaining README-level 
 No frozen files currently declared.
 
 ## Files changed this shift
-- README.md: Applied Claude review items R7-R12.
-- AGENT_HANDOFF.md: Recorded the README review follow-up.
+- AGENT_HANDOFF.md: Recorded baseline commit and install-target synchronization.
 
 ## Tests
-- Red: none intentional for this documentation-only README follow-up.
-- Green: README `rg` check for R7-R12 wording; `run-tests.sh` fixture suite (7/7); `quick_validate.py skills/cli-collaboration`; `git status --short --branch`.
-- Expected non-green: `sync-skill.sh` exits `1` because default install targets drift from the local package. Manual diff also shows `/home/leospe/.gemini/skills/cli-collaboration` is drifted after local changes.
+- Red: none intentional for this operational follow-up.
+- Green: `run-tests.sh` fixture suite (7/7); `quick_validate.py skills/cli-collaboration`; `git status --short --branch`; `sync-skill.sh` after install; `diff -qr skills/cli-collaboration /home/leospe/.gemini/skills/cli-collaboration`.
+- Expected non-green: none currently.
 
 ## Open concerns
-- Git is initialized, but no initial commit exists yet. `git status --short --branch` reports `No commits yet on master` and all package files are untracked.
-- Package validates locally and can be installed to target directories, but the live Codex/agents/Gemini install targets still need an explicit install/sync step if the user wants this new version active.
+- The source package and live Codex/agents/Gemini install targets are aligned as of 2026-05-19T23:43:02+02:00.
 - No backup script was added; `.gitignore` reserves `.handoff-backups/` so a future lightweight backup guardrail can be introduced without diff noise.
 
 ## Next agent starts from
 **Next agent: User.**
 
-Review the local changes, then choose the next operational step: create the initial Git commit, run `sync-skill.sh --install` for Codex/agents targets, install explicitly to Gemini, or define the next project.
+Choose the next project or maintenance task. If this repository should be published remotely, add a remote and push `master`.
 
 Do not touch: `final-skill.md`, `workflow.md`, or `progetti-1-2.md` unless the user explicitly reassigns them.
 
 ## History
+- 2026-05-19T23:43 - Codex CLI: Created baseline commit e7bd2e7 and synchronized Codex/agents/Gemini install targets. (done)
 - 2026-05-19T23:37 - Codex CLI: Applied Claude README review items R7-R12 and re-ran README/skill checks. (done)
 - 2026-05-19T23:31 - Codex CLI: Implemented accepted parser/documentation/Git/concurrency cleanup plan; initialized Git; verified fixture suite 7/7. (done)
 - 2026-05-19T22:52 - Gemini CLI: Installata la skill nel percorso predefinito (~/.gemini/skills/cli-collaboration) e verificata la compatibilità. (done)
