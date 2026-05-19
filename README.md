@@ -67,6 +67,7 @@ The division followed the final C-emendata decision:
 cli-collaboration/
 ├── README.md
 ├── README_IT.md
+├── LICENSE
 ├── AGENT_HANDOFF.md
 ├── docs/
 │   └── future-architecture.md
@@ -259,7 +260,7 @@ The package has passed these local verification gates. Most commands are directl
 | Explicit sync target | `sync-skill.sh --target "$tmp/cli-collaboration"` | pass after explicit install |
 | Ownership guard | `check-ownership.sh --handoff AGENT_HANDOFF.md --agent Codex README.md evals/evals.json` | pass |
 
-Git has been initialized for this workspace and the v2.2 baseline is committed on `master`.
+Git has been initialized for this workspace and the v2.2 baseline is committed on `main`.
 
 The default installed skill directories may drift from this local package until the user runs `install-skill.sh` or `sync-skill.sh --install`.
 
@@ -268,6 +269,10 @@ The default installed skill directories may drift from this local package until 
 The package is locally verified and ready to install. The recommended next operational steps are:
 
 1. Add a Git remote if this repository should be published.
-2. Push `master` to the remote.
+2. Push `main` to the remote.
 3. Run `install-skill.sh --dry-run` before future local installs.
 4. Add the relevant project guidance file (`AGENTS.md`, `CLAUDE.md`, or `GEMINI.md`) to projects that should enforce handoff-first collaboration.
+
+## License
+
+MIT License. See `LICENSE`.

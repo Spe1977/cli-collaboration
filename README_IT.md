@@ -67,6 +67,7 @@ La divisione ha seguito la decisione finale C-emendata:
 cli-collaboration/
 ├── README.md
 ├── README_IT.md
+├── LICENSE
 ├── AGENT_HANDOFF.md
 ├── docs/
 │   └── future-architecture.md
@@ -259,7 +260,7 @@ Il pacchetto ha superato questi gate di verifica locali. La maggior parte dei co
 | Target sync esplicito | `sync-skill.sh --target "$tmp/cli-collaboration"` | pass dopo install esplicito |
 | Ownership guard | `check-ownership.sh --handoff AGENT_HANDOFF.md --agent Codex README.md evals/evals.json` | pass |
 
-Git e stato inizializzato per questo workspace e la baseline v2.2 e committata su `master`.
+Git e stato inizializzato per questo workspace e la baseline v2.2 e committata su `main`.
 
 Le directory skill installate predefinite possono andare in drift rispetto al pacchetto locale finche l'utente non esegue `install-skill.sh` o `sync-skill.sh --install`.
 
@@ -268,6 +269,10 @@ Le directory skill installate predefinite possono andare in drift rispetto al pa
 Il pacchetto e verificato localmente e pronto per l'installazione. I prossimi step operativi raccomandati sono:
 
 1. Aggiungere un remote Git se questo repository deve essere pubblicato.
-2. Pushare `master` sul remote.
+2. Pushare `main` sul remote.
 3. Eseguire `install-skill.sh --dry-run` prima delle future installazioni locali.
 4. Aggiungere il file di guidance di progetto rilevante (`AGENTS.md`, `CLAUDE.md` o `GEMINI.md`) ai progetti che devono applicare collaborazione handoff-first.
+
+## Licenza
+
+Licenza MIT. Vedi `LICENSE`.
