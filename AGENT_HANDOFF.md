@@ -1,11 +1,11 @@
 # AGENT_HANDOFF.md
 
-**Last updated:** 2026-05-19T23:51:36+02:00
+**Last updated:** 2026-05-19T23:55:10+02:00
 **Last agent:** Codex CLI
 **Status:** done
 
 ## Current task
-Installed the committed v2.2 skill package into the explicit Claude target (`~/.claude/skills/cli-collaboration`) after Claude identified drift there.
+Moved install backups out of skill discovery paths after Claude observed that `cli-collaboration.backup.*` directories were still loadable as duplicate skills.
 
 ## Current state
 - The project is fully bootstrapped, with all Phase 1 (Codex), Phase 2 (Claude), and Phase 3 (Gemini) deliverables implemented.
@@ -24,6 +24,7 @@ Installed the committed v2.2 skill package into the explicit Claude target (`~/.
 - `check-ownership.sh` now requires all three ownership headings, normalizes common dash variants in ownership lines, and keeps recursive `**` globs out of the v2.2 contract.
 - Concurrency policy remains procedural in v2.2: one active writer for `AGENT_HANDOFF.md`; flock-based locking is promoted only after a documented concurrent-write incident.
 - `README.md` now exposes the single-writer policy in Core Protocol, Gemini forced activation in Activation And Pause, the stricter exit code 2 semantics, `.gitignore` ownership, parser fixture coverage beyond scenarios A-F, and a single-level glob ownership example.
+- Backup directories were moved from each CLI's `skills/` directory into sibling `skills-backups/` directories so only the definitive v2.2 skill remains discoverable.
 
 ## File ownership
 ### agent-owned
@@ -56,16 +57,17 @@ Installed the committed v2.2 skill package into the explicit Claude target (`~/.
 No frozen files currently declared.
 
 ## Files changed this shift
-- AGENT_HANDOFF.md: Recorded explicit Claude target synchronization.
+- AGENT_HANDOFF.md: Recorded backup cleanup outside skill discovery paths.
 
 ## Tests
 - Red: none intentional for this operational follow-up.
-- Green: `diff -qr skills/cli-collaboration /home/leospe/.claude/skills/cli-collaboration`; `sync-skill.sh`; `diff -qr skills/cli-collaboration /home/leospe/.gemini/skills/cli-collaboration`.
+- Green: `find .../skills -name 'cli-collaboration.backup.*'` returns no backup directories; backups are present under `skills-backups/`; `sync-skill.sh`; `diff -qr skills/cli-collaboration /home/leospe/.claude/skills/cli-collaboration`; `diff -qr skills/cli-collaboration /home/leospe/.gemini/skills/cli-collaboration`.
 - Expected non-green: none currently.
 
 ## Open concerns
 - The source package and live Codex/agents/Claude/Gemini install targets are aligned as of 2026-05-19T23:51:36+02:00.
-- No backup script was added; `.gitignore` reserves `.handoff-backups/` so a future lightweight backup guardrail can be introduced without diff noise.
+- Install backups are preserved outside discovery paths: `/home/leospe/.codex/skills-backups`, `/home/leospe/.agents/skills-backups`, `/home/leospe/.claude/skills-backups`, `/home/leospe/.gemini/skills-backups`.
+- No backup script was added; `.gitignore` reserves `.handoff-backups/` so a future lightweight handoff backup guardrail can be introduced without diff noise.
 
 ## Next agent starts from
 **Next agent: User.**
@@ -75,6 +77,7 @@ Choose the next project or maintenance task. If this repository should be publis
 Do not touch: `final-skill.md`, `workflow.md`, or `progetti-1-2.md` unless the user explicitly reassigns them.
 
 ## History
+- 2026-05-19T23:55 - Codex CLI: Moved cli-collaboration backup directories out of skill discovery paths into skills-backups. (done)
 - 2026-05-19T23:51 - Codex CLI: Installed committed v2.2 package into the explicit Claude target and verified all four install targets aligned. (done)
 - 2026-05-19T23:48 - Gemini CLI: Verified Git baseline, cross-agent skill sync, and GEMINI.md cleanup. Confirmed v2.2 stability. (done)
 - 2026-05-19T23:43 - Codex CLI: Created baseline commit e7bd2e7 and synchronized Codex/agents/Gemini install targets. (done)
