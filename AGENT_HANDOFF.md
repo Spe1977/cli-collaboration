@@ -1,15 +1,15 @@
 # AGENT_HANDOFF.md
 
-**Last updated:** 2026-05-20T16:00:00+02:00
+**Last updated:** 2026-05-20T17:30:00+02:00
 **Last agent:** Claude Code
-**Status:** done
+**Status:** in-progress
 
 ## Current task
-**v2.3 transition — in progress, 2 of 5 PRs complete.** This handoff was just consolidated so a fresh Claude Code chat can resume the work without needing the prior conversation. State summary:
+**v2.3 transition — in progress, 2 of 5 PRs complete, P2 implemented and awaiting review.** State summary:
 
 - **P1 (doc-honest globs)** — DONE. Merged to `main` as commit `10c0c5a` (PR #1, branch `claude/p1-glob-docs`).
 - **P3 (shell hardening + atomic install rollback)** — DONE. PR #2 on branch `claude/p3-shell-hardening`, HEAD `84ff51d`, cross-CLI approved (Codex/ChatGPT + Gemini) and **awaiting user merge**. Only `AGENT_HANDOFF.md` was touched after the code/test approval (handoff-record-only commits); the approved code/test diff is unchanged.
-- **P2 (GitHub Actions CI Linux + macOS)** — pending, branch `claude/p2-ci`. Specs in `## v2.3 release plan` below.
+- **P2 (GitHub Actions CI Linux + macOS)** — implemented on branch `claude/analyze-handoff-p2-a6c44` (session-allocated branch in place of the plan's `claude/p2-ci`). `.github/workflows/ci.yml` added with `shellcheck` and `fixtures` (matrix `ubuntu-latest` + `macos-latest`) jobs; README.md and README_IT.md document the POSIX-shell / Linux+macOS support scope. Awaiting cross-CLI review and user merge.
 - **P4 (mechanical eval checks)** — pending, branch `claude/p4-mechanical-checks`. Specs in `## v2.3 release plan` below.
 - **P5 (housekeeping: version, CHANGELOG, history compact, CONTRIBUTORS_IT)** — pending, branch `claude/p5-housekeeping`. Specs in `## v2.3 release plan` below.
 - **Release tag `v2.3.0`** — pending after all PRs merge.
@@ -74,21 +74,21 @@ The `## v2.3 release plan` section below is the canonical source of truth for wh
 No frozen files currently declared.
 
 ## Files changed this shift
-- skills/cli-collaboration/scripts/check-ownership.sh: Added `set -o pipefail` next to the existing `set -u` (no `-e`, per the selective plan: this script returns non-zero exit codes as normal signals).
-- skills/cli-collaboration/scripts/sync-skill.sh: Replaced `set -u` with `set -euo pipefail`.
-- skills/cli-collaboration/scripts/install-skill.sh: Replaced `set -u` with `set -euo pipefail`; made `mkdir -p` and the pre-install backup `mv` failures explicit and fatal with exit 3; on `cp -R` failure, the script now removes the partially-copied target (if any) and restores the backup, printing a `rollback: restored ...` line on stderr. Documented exit code 3 in `usage()`.
-- skills/cli-collaboration/scripts/test-fixtures/install-rollback-test.sh: New executable end-to-end test that PATH-shadows `cp` with a failing stub, runs `install-skill.sh`, and asserts exit 3 + restored target content + no stale backup + rollback message on stderr.
+- .github/workflows/ci.yml: New GitHub Actions workflow. Two jobs: `shellcheck` (Ubuntu, lints all `*.sh` in the repo with `--exclude=SC2254` because `check-ownership.sh` deliberately uses dynamic `case` patterns as globs — the parser's contract) and `fixtures` (matrix `ubuntu-latest` + `macos-latest`, runs `run-tests.sh` and `install-rollback-test.sh`). The P4 mechanical-checks step is intentionally NOT wired here yet — that script doesn't exist until P4 ships; P4's PR will add the step.
+- README.md: New `## Supported Platforms` section between `## Core Protocol` and `## Install`, documenting Linux+macOS POSIX-shell scope and explicitly excluding native Windows / WSL guarantees. Edited under explicit user supersession scoped to P2 (Codex-owned file).
+- README_IT.md: Mirror `## Piattaforme Supportate` section. Same supersession scope.
 - AGENT_HANDOFF.md: This update.
 
 ## Tests
-- Red: none — hardening + rollback shift; the new test (`install-rollback-test.sh`) was designed to be green on the new behavior. It would have failed against the pre-P3 install script (no rollback, no exit 3).
-- Green (re-run after the `set -e` addition):
+- Red: none — CI scaffolding only; no behavioral change to scripts.
+- Green (local, pre-push):
+  - `shellcheck --exclude=SC2254` on all 5 shell scripts → exit 0.
+  - `bash skills/cli-collaboration/scripts/test-fixtures/run-tests.sh` → 8/8 passing.
   - `bash skills/cli-collaboration/scripts/test-fixtures/install-rollback-test.sh` → `ok - install-rollback`.
-  - `bash skills/cli-collaboration/scripts/test-fixtures/run-tests.sh` → 8/8 passing (no regression from `pipefail` or `-e`).
-  - Manual smoke matrix on all three scripts with `-e` active: `install-skill.sh` happy paths (fresh install, unchanged re-install, update over existing, dry-run) all green; `sync-skill.sh` clean state and drift detection (non-zero exit) both green; `sync-skill.sh --install` end-to-end green; `check-ownership.sh` pass and conflict paths both green (exit 0 and exit 1 respectively).
-- Expected non-green: none currently.
+- Expected non-green: none. Final verification is the workflow run on GitHub once the branch is pushed and a PR is opened (or on the PR-merge-to-main trigger).
 
 ## Review approvals
+- P2 (CI matrix): pending cross-CLI review (Codex/ChatGPT + Gemini) and user merge.
 - Codex/ChatGPT review: approved PR #2 P3 final shape after selective-hardening realignment.
 - Gemini CLI review (cross-CLI QA pass for v2.3 transition):
   - P1 (doc-honest globs): full alignment. The `*`-crosses-`/` correction resolves a critical spec-vs-code discrepancy, validated by the eighth green fixture.
@@ -101,14 +101,14 @@ Integrated plan elaborated by Claude Code, approved by Codex/ChatGPT and Gemini 
 ### P1 — Doc-honest sui glob — DONE
 Merged as PR #1 (commit `10c0c5a`). Corrected: `handoff-template.md:73` (the most factually wrong line — claimed `scripts/*` did not match `scripts/sub/foo.sh`), `codex-adapter.md:58`, `SKILL.md ## Ownership` note, `README.md:128`, `README_IT.md` equivalent. Added pinning fixture `scripts/test-fixtures/handoff-glob-crosses-slash.md` + matching `run-tests.sh` case (fixtures now 8/8). `future-architecture.md` was retired from this scope on Codex review — that file does not make glob semantics claims.
 
-### P2 — GitHub Actions (CI Linux + macOS) — pending
+### P2 — GitHub Actions (CI Linux + macOS) — implemented, awaiting review/merge
 New file `.github/workflows/ci.yml`, two jobs:
-- **shellcheck**: run shellcheck on all `*.sh` in the repo.
-- **fixtures**: matrix on `ubuntu-latest` + `macos-latest`. Each runs `bash skills/cli-collaboration/scripts/test-fixtures/run-tests.sh`, `bash skills/cli-collaboration/scripts/test-fixtures/install-rollback-test.sh`, and `bash evals/run-mechanical-checks.sh` (the latter delivered by P4).
+- **shellcheck**: run shellcheck on all `*.sh` in the repo. SC2254 is excluded with an inline-commented justification because `check-ownership.sh` deliberately uses dynamic `case` patterns as globs.
+- **fixtures**: matrix on `ubuntu-latest` + `macos-latest`. Each runs `bash skills/cli-collaboration/scripts/test-fixtures/run-tests.sh` and `bash skills/cli-collaboration/scripts/test-fixtures/install-rollback-test.sh`. The `bash evals/run-mechanical-checks.sh` step is deferred to P4's PR (which will add the file and the workflow step in the same change).
 
-Document in `README.md` (and `README_IT.md`) that supported targets are POSIX-shell on Linux/macOS; Windows-via-WSL is not guaranteed.
+`README.md` and `README_IT.md` updated with a `## Supported Platforms` / `## Piattaforme Supportate` section documenting Linux/macOS POSIX-shell scope and excluding native Windows / WSL guarantees.
 
-Branch: `claude/p2-ci`. Effort: ~30 min. Risk: low.
+Branch: `claude/analyze-handoff-p2-a6c44` (session-allocated branch in place of the plan's `claude/p2-ci`). Effort: ~30 min. Risk: low.
 
 ### P3 — Shell hardening selettivo + rollback — DONE
 PR #2 (`claude/p3-shell-hardening`), HEAD `2749600`, approved by Codex/ChatGPT and Gemini, awaiting user merge. Implementation:
@@ -157,7 +157,7 @@ Effort: 2 min.
 |---|----|--------|--------|--------|------|
 | 1 | **P1** doc glob + fixture | `claude/p1-glob-docs` | DONE — merged as `10c0c5a` | ~45 min | low |
 | 2 | **P3** shell hardening + rollback | `claude/p3-shell-hardening` | DONE — approved, awaiting merge | ~1 h | medium |
-| 3 | **P2** CI matrix Linux/macOS | `claude/p2-ci` | pending | ~30 min | low |
+| 3 | **P2** CI matrix Linux/macOS | `claude/analyze-handoff-p2-a6c44` | implemented, awaiting review/merge | ~30 min | low |
 | 4 | **P4** mechanical checks + lint handoff | `claude/p4-mechanical-checks` | pending | ~2 h | low |
 | 5 | **P5** version, CHANGELOG, history compact, CONTRIBUTORS_IT | `claude/p5-housekeeping` | pending | ~1 h | nullo |
 | — | Release | tag `v2.3.0` on `main` | pending | 2 min | — |
@@ -176,18 +176,17 @@ Effort: 2 min.
 - An Italian translation `CONTRIBUTORS_IT.md` is not provided; can be added later for symmetry with `README_IT.md` if the user wants it.
 
 ## Next agent starts from
-**Next agent: a fresh Claude Code session resuming the v2.3 transition.** The user will (1) merge PR #2 to `main`, then (2) open a new chat using this `AGENT_HANDOFF.md` as the entry point. This section + `## v2.3 release plan` together contain everything the next session needs.
+**Next agent: a fresh Claude Code or cross-CLI reviewer session.** Concrete next steps:
 
-**Concrete next step once PR #2 is merged:**
-
-1. Read `## v2.3 release plan > P2 — GitHub Actions (CI Linux + macOS) — pending` for the full specification.
-2. Wait for **explicit user authorization scoped to P2** before any code change. The v2.3 plan is locked, but per the project's collaboration protocol each PR requires its own fresh, scoped authorization.
-3. On authorization: branch from updated `main`, create `claude/p2-ci`, add `.github/workflows/ci.yml` with the two jobs specified (shellcheck + fixtures matrix on `ubuntu-latest` and `macos-latest`), document POSIX-shell support scope in `README.md` and `README_IT.md`, push, open PR for cross-CLI review.
-4. After P2 merges: continue with **P4 → P5 → tag `v2.3.0`** in the order documented in the `## v2.3 release plan > PR sequence` table. Each step needs its own scoped authorization.
+1. **Cross-CLI review of P2**: Codex/ChatGPT and Gemini review the `.github/workflows/ci.yml` + README documentation diff on branch `claude/analyze-handoff-p2-a6c44`. Verify the SC2254 exclusion justification, the macOS bash 3.2 compatibility of the `mapfile` step (note: macOS runners on GitHub Actions ship newer bash via Homebrew but the system bash is 3.2 — the `mapfile` in the shellcheck job runs on `ubuntu-latest` only, so this is not a blocker), and the deliberate omission of the P4 mechanical-checks step (deferred to P4's own PR).
+2. **User merge of PR #2 (P3) and the P2 PR** in whatever order the user prefers; they are independent.
+3. **P4 — Mechanical eval checks** is the next implementation step. Read `## v2.3 release plan > P4 — Mechanical eval checks — pending` for the full specification. Requires **fresh, explicitly-scoped user authorization** before any code change. The P4 PR must also add the `bash evals/run-mechanical-checks.sh` step to `.github/workflows/ci.yml` (currently omitted because the script doesn't exist yet).
+4. After P4 merges: continue with **P5 → tag `v2.3.0`** per the `## v2.3 release plan > PR sequence` table. Each step needs its own scoped authorization.
 
 **Do not touch:** `final-skill.md`, `workflow.md`, or `progetti-1-2.md` unless the user explicitly reassigns them. These remain user-reserved.
 
 ## History
+- 2026-05-20T17:30 - Claude Code: P2 of the v2.3 plan — GitHub Actions CI on Linux + macOS. Added `.github/workflows/ci.yml` with `shellcheck` (Ubuntu, excludes SC2254 for the deliberate dynamic-glob `case` in `check-ownership.sh`) and `fixtures` (matrix `ubuntu-latest` + `macos-latest`, runs `run-tests.sh` and `install-rollback-test.sh`). Added `## Supported Platforms` / `## Piattaforme Supportate` to `README.md` / `README_IT.md` (Linux+macOS POSIX-shell; native Windows / WSL not supported). The P4 mechanical-checks step is intentionally deferred to P4's own PR. Branch is the session-allocated `claude/analyze-handoff-p2-a6c44` rather than the plan's `claude/p2-ci`. Local pre-push: shellcheck clean, fixtures 8/8, rollback green. (in-progress)
 - 2026-05-20T16:00 - Claude Code (handoff consolidation): Consolidated v2.3 progress into a self-contained AGENT_HANDOFF.md so a fresh Claude Code chat can resume the work without external context. Refreshed `## Current task` with per-P status, refreshed `## Next agent starts from` to point explicitly at P2 (CI/CD with GitHub Actions) as the next concrete step gated on fresh user authorization, embedded the full v2.3 release plan as a new top-level section (added in the prior commit `84ff51d`), and recorded the plan-elaboration shift at 2026-05-20T11:30 below. PR #2 (`claude/p3-shell-hardening`) HEAD now `84ff51d`; only AGENT_HANDOFF.md touched, no code or test changes — the approved P3 diff is unchanged. (done)
 - 2026-05-20T15:20 - Codex/ChatGPT review: Approved PR #2 P3 final shape after the selective-hardening correction. Approval covers `check-ownership.sh` using `set -u` plus `set -o pipefail`, `install-skill.sh` and `sync-skill.sh` using `set -euo pipefail`, the atomic rollback behavior in `install-skill.sh`, and the new rollback fixture. Gemini sign-off was already handled separately in the project review flow. No remaining Codex/ChatGPT blocker for merge. (done)
 - 2026-05-20T14:15 - Gemini CLI: Eseguita review completa cross-CLI. Convalidati e approvati i piani P1 e P3; registrato il QA pass per la transizione alla v2.3. (done)
