@@ -1,15 +1,16 @@
 # AGENT_HANDOFF.md
 
-**Last updated:** 2026-05-20T18:30:00+02:00
+**Last updated:** 2026-05-20T19:30:00+02:00
 **Last agent:** Claude Code
 **Status:** in-progress
 
 ## Current task
-**v2.3 transition — in progress, 3 of 5 PRs merged.** State summary:
+**v2.3 transition — in progress, 3 of 5 PRs merged; P4 implemented and pushed.** State summary:
 
 - **P1 (doc-honest globs)** — DONE. Merged to `main` as commit `10c0c5a` (PR #1, branch `claude/p1-glob-docs`).
 - **P3 (shell hardening + atomic install rollback)** — DONE. Merged to `main` as merge commit `8ae7e59` (PR #2, branch `claude/p3-shell-hardening`).
-- **P2 (GitHub Actions CI Linux + macOS)** — DONE. Merged to `main` as merge commit `fc396f1` (PR #3, branch `claude/analyze-handoff-p2-a6c44` — session-allocated branch in place of the plan's `claude/p2-ci`). Codex post-merge review approved P2 with one documentation correction: the platform wording in `README.md`, `README_IT.md`, and this handoff was changed from "POSIX-shell" to "Bash on Linux/macOS" because the scripts use Bash-only features (`mapfile`, `[[ ... ]]`) and are not strictly POSIX `sh`.
+- **P2 (GitHub Actions CI Linux + macOS)** — DONE. Merged to `main` as merge commit `fc396f1` (PR #3, branch `claude/analyze-handoff-p2-a6c44` — session-allocated branch in place of the plan's `claude/p2-ci`). Codex post-merge review approved P2 with one documentation correction: the platform wording in `README.md`, `README_IT.md`, and this handoff was changed from "POSIX-shell" to "Bash on Linux/macOS" because the scripts use Bash-only features (`mapfile`, `[[ ... ]]`) and are not strictly POSIX `sh`. The wording correction was pushed as commit `a7e6436` (still on branch, not yet a separate PR — bundled with the P4 PR below).
+- **P4 (mechanical eval checks)** — implemented on branch `claude/analyze-handoff-p2-a6c44` (session-allocated branch in place of the plan's `claude/p4-mechanical-checks`; the P2 doc-correction commit `a7e6436` and the P4 commit are stacked on the same branch and will be opened as the next PR). Added `evals/run-mechanical-checks.sh` (parser fixtures + install rollback + lint-handoff + SKILL.md frontmatter check, with explicit "mechanical guards only" head comment), `evals/lint-handoff.py` (structural lint), updated `evals/evals.json` (`status` → `"mechanical-guards-only"`, added per-scenario `mechanized` field), and wired the new script into `.github/workflows/ci.yml` (Python setup + PyYAML install + new step in the `fixtures` job). Awaiting cross-CLI review and user merge.
 - **P4 (mechanical eval checks)** — pending, branch `claude/p4-mechanical-checks`. Specs in `## v2.3 release plan` below.
 - **P5 (housekeeping: version, CHANGELOG, history compact, CONTRIBUTORS_IT)** — pending, branch `claude/p5-housekeeping`. Specs in `## v2.3 release plan` below.
 - **Release tag `v2.3.0`** — pending after all PRs merge.
@@ -74,16 +75,25 @@ The `## v2.3 release plan` section below is the canonical source of truth for wh
 No frozen files currently declared.
 
 ## Files changed this shift
-- README.md: `## Supported Platforms` wording corrected per Codex post-merge review: "POSIX-compatible shells on Linux and macOS" → "Bash on Linux and macOS (the scripts rely on Bash features such as `mapfile` and `[[ ... ]]` and are not strictly POSIX `sh`)". Edited under explicit user supersession scoped to P2 follow-up (Codex-owned file).
-- README_IT.md: Mirror correction in `## Piattaforme Supportate`. Same supersession scope.
-- AGENT_HANDOFF.md: This update — recorded the merge of PR #3 (P2), recorded Codex's P2 post-merge approval-with-correction, refreshed `## Current task`, `## v2.3 release plan > P2`, `## PR sequence` table, and `## Next agent starts from` to reflect that P1+P2+P3 are all merged and P4 is the next concrete step.
+- evals/run-mechanical-checks.sh: New executable Bash driver with the explicit head comment "Mechanical guards only. This does NOT evaluate agent behavior on scenarios A-F; behavioral evaluation requires an LLM-judge harness which is out of scope." Runs four steps in order: (1) `bash skills/cli-collaboration/scripts/test-fixtures/run-tests.sh`, (2) `bash skills/cli-collaboration/scripts/test-fixtures/install-rollback-test.sh`, (3) `python3 evals/lint-handoff.py AGENT_HANDOFF.md`, (4) inline Python check that parses `skills/cli-collaboration/SKILL.md` frontmatter with PyYAML and asserts `name` and `description` are present and non-empty. Exit codes: 0 pass, 1 check failed, 2 setup error (missing python3/PyYAML/required files).
+- evals/lint-handoff.py: New Python 3 structural lint. Checks: (a) required top-level headings present (`## Current task`, `## File ownership`, `## Files changed this shift`, `## Tests`, `## Next agent starts from`, `## History`); (b) `## File ownership` contains the three required subsections (`### agent-owned`, `### user-reserved`, `### frozen`); (c) every `## History` entry has a leading ISO 8601 parseable timestamp (accepts `YYYY-MM-DDTHH:MM[:SS][±HH:MM|Z]`); (d) `## Next agent starts from` has non-trivial content (>= 40 collapsed chars, not a placeholder like TBD/TODO/N/A).
+- evals/evals.json: `status` field `"tri-cli-complete"` → `"mechanical-guards-only"`; added `status_note` explaining the new label; added per-scenario boolean `"mechanized"` field — only scenario C is marked `true` (covered by `run-tests.sh` fixtures), A/B/D/E/F are `false` (intent-only, would require LLM-judge). Scenario C also gets a `mechanized_by` field naming the specific fixtures.
+- .github/workflows/ci.yml: Extended the `fixtures` job with three new steps: `actions/setup-python@v5` (Python 3.x), `python3 -m pip install pyyaml`, and `bash evals/run-mechanical-checks.sh`. The two pre-existing per-fixture steps are kept so failures show up under finer-grained step names; `run-mechanical-checks.sh` does re-run those same two fixtures, accepted as a small redundancy (~0.5s on each runner) per the plan's explicit "Each runs run-tests.sh, install-rollback-test.sh, and run-mechanical-checks.sh" wording.
+- AGENT_HANDOFF.md: This update — refreshed `## Current task`, added P4 entries to `## v2.3 release plan > P4`, `## PR sequence` table, and `## Next agent starts from`; added a new `## History` entry.
 
 ## Tests
-- Red: none — documentation-only follow-up to P2.
-- Green: no script or test change since the P2 merge; CI on `main` covers what was merged.
-- Expected non-green: none.
+- Red: none — P4 adds CI scaffolding and a new structural lint; the lint was designed to be green against the current `AGENT_HANDOFF.md`. It would fail on a handoff that is missing a required heading, has a non-ISO-8601 timestamp in `## History`, or has a trivial `## Next agent starts from`.
+- Green (local, pre-push):
+  - `bash evals/run-mechanical-checks.sh` → all 4 steps pass (parser fixtures 8/8, install rollback ok, lint-handoff 4/4 ok, SKILL.md frontmatter ok with no extra fields).
+  - `python3 evals/lint-handoff.py` (standalone) → all 4 structural checks pass.
+  - `python3 -c "import json; json.load(open('evals/evals.json'))"` → JSON valid.
+  - `shellcheck --exclude=SC2254` on all 6 shell scripts (including the new `run-mechanical-checks.sh`) → exit 0.
+  - `bash skills/cli-collaboration/scripts/test-fixtures/run-tests.sh` → 8/8 passing.
+  - `bash skills/cli-collaboration/scripts/test-fixtures/install-rollback-test.sh` → `ok - install-rollback`.
+- Expected non-green: none. Final verification is the workflow run on GitHub once the branch is pushed and PR opened.
 
 ## Review approvals
+- P4 (mechanical eval checks): pending cross-CLI review (Codex/ChatGPT + Gemini) and user merge.
 - P2 (CI matrix): Codex/ChatGPT post-merge approval with one documentation correction (wording "POSIX-shell" → "Bash on Linux/macOS"). The correction is applied in this shift. No functional CI changes were requested. Gemini sign-off folded into the standard cross-CLI v2.3 pass recorded earlier.
 - Codex/ChatGPT review: approved PR #2 P3 final shape after selective-hardening realignment.
 - Gemini CLI review (cross-CLI QA pass for v2.3 transition):
@@ -113,23 +123,16 @@ PR #2 (`claude/p3-shell-hardening`), HEAD `2749600`, approved by Codex/ChatGPT a
 - `install-skill.sh` cp-failure rollback: if `cp -R` fails after the backup has been taken, the partially-copied target is removed and the backup is restored. New exit code `3` documented in `usage()`.
 - New end-to-end test `scripts/test-fixtures/install-rollback-test.sh` using a PATH-injected failing `cp` stub.
 
-### P4 — Mechanical eval checks — pending
+### P4 — Mechanical eval checks — implemented, awaiting review/merge
 **Naming discipline**: previously called "minimal scenario runner"; Codex correctly flagged that as overclaiming. The plan renames it to "mechanical eval checks". It does NOT evaluate agent behavior on scenarios A–F; behavioral evaluation requires an LLM-judge harness which is **out of scope** (separate project).
 
-**New file `evals/run-mechanical-checks.sh`**:
-- Runs the existing parser fixtures (`run-tests.sh`) and the install rollback test (`install-rollback-test.sh`).
-- Runs `evals/lint-handoff.py` (new) for structural verification of `AGENT_HANDOFF.md`: required headings present, timestamps are ISO 8601 parseable, `Next agent starts from` is non-trivial.
-- Runs a PyYAML-based loader step that verifies `SKILL.md` frontmatter parses and that `name` and `description` are still present (bundled with P5's `version` addition — see below).
+Implementation:
+- `evals/run-mechanical-checks.sh` — Bash driver with the mandated head comment. Runs parser fixtures, install rollback, lint-handoff, and the SKILL.md frontmatter PyYAML check.
+- `evals/lint-handoff.py` — Python 3 structural lint over `AGENT_HANDOFF.md` (required headings, ownership subsections, ISO 8601 timestamps in `## History`, non-trivial `## Next agent starts from`).
+- `evals/evals.json` — `status` → `"mechanical-guards-only"`; added per-scenario `"mechanized"` (only C is `true`); added `status_note` and `mechanized_by` (for C) for transparency.
+- `.github/workflows/ci.yml` — `fixtures` job now also sets up Python, installs PyYAML, and runs `evals/run-mechanical-checks.sh`.
 
-Head-of-file comment must be explicit:
-```bash
-# Mechanical guards only. This does NOT evaluate agent behavior on scenarios A-F;
-# behavioral evaluation requires an LLM-judge harness which is out of scope.
-```
-
-**`evals/evals.json` updates**: change top-level status `"tri-cli-complete"` → `"mechanical-guards-only"`. Add a per-scenario field `"mechanized": true | false` so it is explicit which scenarios are CI-verified vs. which are intent-only.
-
-Branch: `claude/p4-mechanical-checks`. Effort: ~2 h. Risk: low.
+Branch: `claude/analyze-handoff-p2-a6c44` (session-allocated branch in place of the plan's `claude/p4-mechanical-checks`). The P2 doc-correction commit `a7e6436` is stacked on the same branch and will go in the same PR.
 
 ### P5 — Housekeeping — pending
 1. **`SKILL.md` frontmatter**: add `version: "2.3.0"`. **Cautela di Codex** (accepted): PyYAML parse is necessary but not sufficient — it verifies the YAML is valid but does not guarantee that every real skill loader accepts a `version` field. The mechanical check (delivered by P4) verifies (a) the frontmatter parses, (b) `name` and `description` are still present. As an additional safeguard, document the version *also* in `README.md` and `CHANGELOG.md` so the source of truth is not solely the frontmatter; if a downstream skill validator rejects the field, keep the frontmatter only if the official validator accepts it.
@@ -154,7 +157,7 @@ Effort: 2 min.
 | 1 | **P1** doc glob + fixture | `claude/p1-glob-docs` | DONE — merged as `10c0c5a` | ~45 min | low |
 | 2 | **P3** shell hardening + rollback | `claude/p3-shell-hardening` | DONE — merged as `8ae7e59` | ~1 h | medium |
 | 3 | **P2** CI matrix Linux/macOS | `claude/analyze-handoff-p2-a6c44` | DONE — merged as `fc396f1` | ~30 min | low |
-| 4 | **P4** mechanical checks + lint handoff | `claude/p4-mechanical-checks` | pending | ~2 h | low |
+| 4 | **P4** mechanical checks + lint handoff | `claude/analyze-handoff-p2-a6c44` | implemented, awaiting review/merge | ~2 h | low |
 | 5 | **P5** version, CHANGELOG, history compact, CONTRIBUTORS_IT | `claude/p5-housekeeping` | pending | ~1 h | nullo |
 | — | Release | tag `v2.3.0` on `main` | pending | 2 min | — |
 
@@ -172,18 +175,19 @@ Effort: 2 min.
 - An Italian translation `CONTRIBUTORS_IT.md` is not provided; can be added later for symmetry with `README_IT.md` if the user wants it.
 
 ## Next agent starts from
-**Next agent: a fresh Claude Code session resuming the v2.3 transition.** P1, P2, and P3 are all merged to `main` (`10c0c5a`, `fc396f1`, `8ae7e59` respectively). Two PRs remain plus the release tag.
+**Next agent: a fresh Claude Code or cross-CLI reviewer session.** P1, P2, P3 are merged on `main`; P4 is implemented and pushed on `claude/analyze-handoff-p2-a6c44` (together with the P2 doc-correction commit `a7e6436`), awaiting cross-CLI review and merge. One PR remains after this (P5) plus the `v2.3.0` tag.
 
-**Concrete next step:**
+**Concrete next steps:**
 
-1. Read `## v2.3 release plan > P4 — Mechanical eval checks — pending` for the full specification.
-2. Wait for **explicit user authorization scoped to P4** before any code change. The v2.3 plan is locked, but per the project's collaboration protocol each PR requires its own fresh, scoped authorization.
-3. On authorization: branch from updated `main`, create `claude/p4-mechanical-checks`, add `evals/run-mechanical-checks.sh` and `evals/lint-handoff.py`, update `evals/evals.json` (`tri-cli-complete` → `mechanical-guards-only`, add `mechanized: true|false` per scenario), and **wire the new script into `.github/workflows/ci.yml`** by adding a `bash evals/run-mechanical-checks.sh` step to the `fixtures` job (deferred from P2). Push, open PR for cross-CLI review.
-4. After P4 merges: continue with **P5 → tag `v2.3.0`** per the `## v2.3 release plan > PR sequence` table. Each step needs its own scoped authorization.
+1. **Cross-CLI review of P4** (with the bundled P2 doc correction): Codex/ChatGPT and Gemini review the diff on branch `claude/analyze-handoff-p2-a6c44`. Verify the explicit "mechanical guards only" framing in the script head comment and in `evals/evals.json`; verify the per-scenario `mechanized` field correctly distinguishes C (mechanized) from A/B/D/E/F (intent-only); verify the CI wiring (Python setup + PyYAML install + step in `fixtures` job).
+2. **User merge of the P4 PR**.
+3. **P5 — Housekeeping** is the next implementation step. Read `## v2.3 release plan > P5 — Housekeeping — pending` for the full specification. Requires **fresh, explicitly-scoped user authorization** before any code change.
+4. After P5 merges: cut the `v2.3.0` tag per `## Release finale (tag v2.3.0) — pending`.
 
 **Do not touch:** `final-skill.md`, `workflow.md`, or `progetti-1-2.md` unless the user explicitly reassigns them. These remain user-reserved.
 
 ## History
+- 2026-05-20T19:30 - Claude Code: P4 of the v2.3 plan — mechanical eval checks. Added `evals/run-mechanical-checks.sh` with the mandated "Mechanical guards only" head comment, running four steps: ownership parser fixtures, install rollback fixture, `evals/lint-handoff.py` structural lint on `AGENT_HANDOFF.md`, and a PyYAML-based check on `skills/cli-collaboration/SKILL.md` frontmatter (asserts `name` and `description`). Added `evals/lint-handoff.py` checking required top-level headings, the three ownership subsections, ISO 8601 timestamps in `## History`, and non-trivial `## Next agent starts from`. Updated `evals/evals.json`: `status` → `"mechanical-guards-only"`, added `status_note`, added per-scenario `mechanized` (only C `true`, with `mechanized_by` naming the fixture set). Extended `.github/workflows/ci.yml > fixtures` with `actions/setup-python@v5`, `pip install pyyaml`, and a `bash evals/run-mechanical-checks.sh` step. Branch is the session-allocated `claude/analyze-handoff-p2-a6c44` rather than the plan's `claude/p4-mechanical-checks`; the P2 doc-correction commit `a7e6436` is stacked on the same branch and will be in the same PR. Local pre-push: shellcheck clean across all 6 scripts, JSON valid, `run-mechanical-checks.sh` all 4 steps green. (in-progress)
 - 2026-05-20T18:30 - Claude Code: P2 follow-up after Codex post-merge review. Two documentation-only edits: (1) reworded the `## Supported Platforms` section in `README.md` and `## Piattaforme Supportate` in `README_IT.md` from "POSIX-compatible shells on Linux and macOS" to "Bash on Linux and macOS" (with a parenthetical noting that the scripts use Bash-only features like `mapfile` and `[[ ... ]]` and are not strictly POSIX `sh`), per Codex's correction; (2) updated this `AGENT_HANDOFF.md` to reflect that PR #3 (P2) has been merged to `main` as commit `fc396f1`, so P1+P2+P3 are now all on `main` and P4 is the next concrete step. No CI or script changes. Codex registered the change as P2-approved-with-correction; no functional issues raised. Branch reused: `claude/analyze-handoff-p2-a6c44` (per session allocation), fast-forwarded to `main` before the edit. (in-progress)
 - 2026-05-20T17:30 - Claude Code: P2 of the v2.3 plan — GitHub Actions CI on Linux + macOS. Added `.github/workflows/ci.yml` with `shellcheck` (Ubuntu, excludes SC2254 for the deliberate dynamic-glob `case` in `check-ownership.sh`) and `fixtures` (matrix `ubuntu-latest` + `macos-latest`, runs `run-tests.sh` and `install-rollback-test.sh`). Added `## Supported Platforms` / `## Piattaforme Supportate` to `README.md` / `README_IT.md` (Linux+macOS POSIX-shell; native Windows / WSL not supported). The P4 mechanical-checks step is intentionally deferred to P4's own PR. Branch is the session-allocated `claude/analyze-handoff-p2-a6c44` rather than the plan's `claude/p2-ci`. Local pre-push: shellcheck clean, fixtures 8/8, rollback green. (in-progress)
 - 2026-05-20T16:00 - Claude Code (handoff consolidation): Consolidated v2.3 progress into a self-contained AGENT_HANDOFF.md so a fresh Claude Code chat can resume the work without external context. Refreshed `## Current task` with per-P status, refreshed `## Next agent starts from` to point explicitly at P2 (CI/CD with GitHub Actions) as the next concrete step gated on fresh user authorization, embedded the full v2.3 release plan as a new top-level section (added in the prior commit `84ff51d`), and recorded the plan-elaboration shift at 2026-05-20T11:30 below. PR #2 (`claude/p3-shell-hardening`) HEAD now `84ff51d`; only AGENT_HANDOFF.md touched, no code or test changes — the approved P3 diff is unchanged. (done)
