@@ -7,6 +7,9 @@
 #   2. Install rollback fixture (install-rollback-test.sh)
 #   3. Structural lint on AGENT_HANDOFF.md (lint-handoff.py)
 #   4. SKILL.md frontmatter parse + required-fields check (inline Python)
+#   5. check-ownership.sh source-guard: refuses literal U+2013/U+2014 in
+#      patterns (re-introducing them broke macOS Bash 3.2). Implemented in
+#      Python rather than `grep -P` because BSD grep on macOS lacks -P.
 #
 # Exit codes:
 #   0  all mechanical checks passed
@@ -38,16 +41,16 @@ python3 -c "import yaml" 2>/dev/null || fail "PyYAML not installed (pip install 
 
 step() { printf '\n== %s ==\n' "$1"; }
 
-step "1/4 ownership parser fixtures"
+step "1/5 ownership parser fixtures"
 bash skills/cli-collaboration/scripts/test-fixtures/run-tests.sh
 
-step "2/4 install rollback fixture"
+step "2/5 install rollback fixture"
 bash skills/cli-collaboration/scripts/test-fixtures/install-rollback-test.sh
 
-step "3/4 AGENT_HANDOFF.md structural lint"
+step "3/5 AGENT_HANDOFF.md structural lint"
 python3 evals/lint-handoff.py AGENT_HANDOFF.md
 
-step "4/4 SKILL.md frontmatter check"
+step "4/5 SKILL.md frontmatter check"
 python3 - <<'PY'
 import sys, pathlib, yaml
 
@@ -87,6 +90,51 @@ if errors:
 
 extra = sorted(set(data.keys()) - {"name", "description"})
 print(f"ok   frontmatter parses; name+description present; extra fields: {extra or 'none'}")
+PY
+
+step "5/5 check-ownership.sh source-guard"
+python3 - <<'PY'
+"""Refuse literal en-dash (U+2013, bytes E2 80 93) or em-dash (U+2014,
+bytes E2 80 94) anywhere in check-ownership.sh, except on the two lines
+that define EN_DASH/EM_DASH and on comment lines that name these
+characters in prose (so the comments explaining the workaround can
+still mention them).
+
+This guard is what prevents the macOS Bash 3.2 multibyte-pattern bug
+from being silently reintroduced. Implemented in Python because BSD
+grep on macOS lacks -P, and we want byte-level matching that works
+identically on Linux and macOS runners.
+"""
+import sys
+from pathlib import Path
+
+target = Path("skills/cli-collaboration/scripts/check-ownership.sh")
+allow_substrings = (
+    "EN_DASH=",
+    "EM_DASH=",
+    "multibyte",
+    "en-dash",
+    "em-dash",
+    "U+2013",
+    "U+2014",
+)
+
+bad = []
+for lineno, raw in enumerate(target.read_bytes().splitlines(), 1):
+    if b"\xe2\x80\x93" not in raw and b"\xe2\x80\x94" not in raw:
+        continue
+    text = raw.decode("utf-8", errors="replace")
+    if any(token in text for token in allow_substrings):
+        continue
+    bad.append((lineno, text))
+
+if bad:
+    print("FAIL: literal multibyte dash characters in check-ownership.sh:", file=sys.stderr)
+    for lineno, text in bad:
+        print(f"    {lineno}: {text}", file=sys.stderr)
+    sys.exit(1)
+
+print("ok   no literal en-/em-dash in check-ownership.sh outside allowlisted definitions")
 PY
 
 printf '\nAll mechanical checks passed.\n'

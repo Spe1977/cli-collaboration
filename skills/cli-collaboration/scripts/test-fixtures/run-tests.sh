@@ -32,28 +32,13 @@ run_case missing-frozen-section 2 --handoff "$FIXTURES/handoff-missing-frozen-se
 run_case endash-owner 0 --handoff "$FIXTURES/handoff-endash.md" --agent Claude src/app.js
 run_case glob-crosses-slash 0 --handoff "$FIXTURES/handoff-glob-crosses-slash.md" --agent Codex scripts/sub/foo.sh
 
-# Source-level regression guard: literal multibyte dash characters in
-# `[[ ... ]]` or `${var//pat/rep}` patterns broke macOS Bash 3.2 (the
-# patterns are not matched/substituted correctly under that bash + C
-# locale). The script now defines $EM_DASH and $EN_DASH via ANSI-C
-# quoting and uses those variables in patterns. Block reintroduction by
-# refusing literal U+2013/U+2014 anywhere outside the documented
-# definition lines.
-if grep -nP '[\xe2][\x80][\x93\x94]' "$ROOT/check-ownership.sh" \
-     | grep -v '^[0-9]\+:[A-Z_]\+_DASH=' \
-     | grep -v 'multibyte\|en-dash\|em-dash\|U+201[34]' \
-     >/tmp/dashes-in-script.txt; then
-  if [ -s /tmp/dashes-in-script.txt ]; then
-    echo "not ok - source-guard literal multibyte dash characters in check-ownership.sh:"
-    sed 's/^/    /' /tmp/dashes-in-script.txt
-    failures=$((failures + 1))
-  else
-    echo "ok - source-guard no literal multibyte dashes outside definitions"
-  fi
-else
-  echo "ok - source-guard no literal multibyte dashes outside definitions"
-fi
-rm -f /tmp/dashes-in-script.txt
+# Note: the source-level regression guard that prevents literal multibyte
+# en-dash/em-dash characters from being reintroduced into check-ownership.sh
+# is intentionally NOT in this file. It lives in evals/run-mechanical-checks.sh,
+# where Python 3 is already a hard dependency. An earlier draft used
+# `grep -nP` here, which is not portable to macOS/BSD grep — moving the
+# guard out keeps this file free of GNU-grep-only flags so the fixture
+# suite runs identically on Linux and macOS without an extra dependency.
 
 rm -f "$FIXTURES"/*.out "$FIXTURES"/*.err
 
