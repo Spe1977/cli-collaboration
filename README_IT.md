@@ -125,7 +125,7 @@ Le tre classi di ownership sono:
 - `user-reserved`: l'utente possiede il file; fermarsi prima di modificarlo.
 - `frozen`: il file e protetto; fermarsi prima di modificarlo.
 
-Tutte e tre le intestazioni di ownership devono essere presenti in `AGENT_HANDOFF.md`, anche quando una sezione e vuota. Il separatore canonico di ownership e l'em-dash (`—`); il checker tollera varianti comuni di dash, ma gli handoff generati devono usare la forma canonica. I glob ricorsivi `**` non fanno parte del contratto parser v2.2.
+Tutte e tre le intestazioni di ownership devono essere presenti in `AGENT_HANDOFF.md`, anche quando una sezione e vuota. Il separatore canonico di ownership e l'em-dash (`—`); il checker tollera varianti comuni di dash, ma gli handoff generati devono usare la forma canonica. I pattern di ownership sono pattern bash `case`: `*` matcha qualsiasi sequenza di caratteri **incluso `/`**, quindi `scripts/*` copre sia `scripts/foo.sh` sia `scripts/sub/foo.sh`; usa segmenti di path espliciti quando devi limitare il match a un singolo livello di directory. `**` non e un token riconosciuto.
 
 Concorrenza: `AGENT_HANDOFF.md` ha un solo writer attivo alla volta in v2.2. L'infrastruttura di locking e rimandata alla v3 ed e vincolata a un incidente documentato di scrittura concorrente registrato nella history dell'handoff (vedi `docs/future-architecture.md`).
 

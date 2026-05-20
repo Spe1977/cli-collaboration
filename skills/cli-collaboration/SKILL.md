@@ -40,6 +40,8 @@ Use this exact line shape:
 - <path-or-glob>: <agent-name> — <reason>
 ```
 
+Patterns are bash `case` patterns: `*` matches any sequence of characters **including `/`**, so `scripts/*` matches both `scripts/foo.sh` and `scripts/sub/foo.sh`. Use explicit path segments when you need to scope to a single directory level. `**` is not a recognized token.
+
 Sections:
 
 - `### agent-owned`: files assigned to Codex, Claude, Gemini, or another named agent. Globs are allowed. Parenthetical notes like `(pending Phase 2)` are advisory.

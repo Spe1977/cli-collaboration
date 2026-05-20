@@ -70,7 +70,7 @@ The structure below is the contract parsed by `scripts/check-ownership.sh`. Keep
 **File ownership**
 - `### agent-owned`, `### user-reserved`, `### frozen` are the only three subsections accepted by the parser, and all three headings are required. Empty subsections are allowed; write `No frozen files currently declared.` rather than deleting the heading.
 - Line shape, parsed exactly: `- <path-or-glob>: <agent-name> — <reason>`. The canonical separator is the em-dash `—` (U+2014). The parser tolerates en-dash (`–`), a regular hyphen surrounded by spaces (` - `), and `--`, but generated handoffs should still use the canonical em-dash.
-- Globs use shell pattern semantics: `scripts/*` matches `scripts/foo.sh` but not `scripts/sub/foo.sh`. Recursive `**` globs are not part of the v2.2 parser contract; list recursive paths explicitly instead.
+- Patterns are bash `case` patterns. `*` matches any sequence of characters **including `/`**, so `scripts/*` matches both `scripts/foo.sh` and `scripts/sub/foo.sh`. When you need to scope to a single directory level, use explicit path segments (e.g. list `scripts/foo.sh` and `scripts/bar.sh` rather than relying on `*` to stop at a slash). `**` is not a recognized token.
 - Parenthetical annotations (e.g. `Claude (pending Phase 2)`) are advisory: the parser strips them, so the owner above compares as `Claude`.
 - Reassignment is a handoff event. Note the previous owner in the `## History` block when changing an ownership line.
 

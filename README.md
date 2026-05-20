@@ -125,7 +125,7 @@ The three ownership classes are:
 - `user-reserved`: the user owns the file; stop before editing.
 - `frozen`: the file is protected; stop before editing.
 
-All three ownership headings must be present in `AGENT_HANDOFF.md`, even when a section is empty. The canonical ownership separator is an em-dash (`—`); the checker tolerates common dash variants but generated handoffs should use the canonical form. Recursive `**` globs are not part of the v2.2 parser contract.
+All three ownership headings must be present in `AGENT_HANDOFF.md`, even when a section is empty. The canonical ownership separator is an em-dash (`—`); the checker tolerates common dash variants but generated handoffs should use the canonical form. Ownership patterns are bash `case` patterns: `*` matches any sequence of characters including `/`, so `scripts/*` covers both `scripts/foo.sh` and `scripts/sub/foo.sh`; use explicit path segments when you need to scope to a single directory level. `**` is not a recognized token.
 
 Concurrency: `AGENT_HANDOFF.md` has one active writer at a time in v2.2. Locking infrastructure is deferred to v3 and gated on a documented concurrent-write incident logged in the handoff history (see `docs/future-architecture.md`).
 
