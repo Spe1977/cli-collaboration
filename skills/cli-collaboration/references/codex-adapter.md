@@ -33,6 +33,7 @@ All scripts expect to run from any cwd and resolve paths from their own location
   - `0`: valid ownership and no conflict detected.
   - `1`: conflict with `agent-owned`, `user-reserved`, or `frozen`.
   - `2`: usage error, missing handoff, or malformed ownership section.
+  - **Implementation note (v2.3.0)**: `check-ownership.sh` is a thin Bash wrapper that delegates to `scripts/parse-ownership.py`. Python 3 is therefore a runtime dependency of the ownership check. The CLI contract above (flags, env var, exit codes, conflict-message wording) is unchanged; only the implementation moved out of Bash, because macOS Bash 3.2.57 proved unreliable on multibyte UTF-8 input (en-dash, em-dash) across seven distinct Bash-side mitigations.
 - `scripts/install-skill.sh [--dry-run] [--source DIR] [--target DIR ...]`
   - Dry-run prints planned copies.
   - Non-dry-run backs up divergent targets before copying.
@@ -53,7 +54,7 @@ Default install targets are `${CODEX_HOME:-$HOME/.codex}/skills/cli-collaboratio
 
 The `### agent-owned`, `### user-reserved`, and `### frozen` headings are all required, even when a section is empty. Empty sections may use prose such as `No frozen files currently declared.` under the heading.
 
-The canonical separator is the em-dash (`—`). The parser normalizes common LLM variants (`–`, ` - `, and ` -- `) before extracting the owner, but generated handoffs should still use the canonical shape.
+The canonical separator is the em-dash (`—`). The parser (v2.3.0+, Python) extracts the owner as the first whitespace-delimited token after the colon and ignores the separator entirely, so en-dash (`–`), em-dash (`—`), ASCII hyphen (`-`), and double-hyphen (`--`) all work interchangeably. Generated handoffs should still use the canonical em-dash for stylistic consistency.
 
 Globs use bash `case`-pattern semantics: `*` matches any sequence of characters **including `/`**, so `scripts/*` covers nested paths such as `scripts/sub/foo.sh`. Use explicit path segments when you want to scope to a single directory level. `**` is not a recognized token. Agent names may include parenthetical annotations; the parser strips them for comparison, so `Claude (pending Phase 2)` compares as `Claude`.
 
