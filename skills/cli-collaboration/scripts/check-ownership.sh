@@ -70,8 +70,24 @@ done
 normalize_owner() {
   local value="$1"
   value="${value%%(*}"
-  value="${value%%[[:space:]]}"
+  while [[ "$value" == *[[:space:]] ]]; do
+    value="${value%[[:space:]]}"
+  done
+  while [[ "$value" == [[:space:]]* ]]; do
+    value="${value#[[:space:]]}"
+  done
   printf '%s' "$value"
+}
+
+normalize_dashes() {
+  # Keep all multibyte dash matching out of Bash pattern operations.
+  # BSD/GNU sed handle these byte strings consistently under LC_ALL=C;
+  # after this step, owner delimiter parsing below uses ASCII-only Bash
+  # patterns. This is the only reliable way to handle U+2013 / U+2014 on
+  # macOS Bash 3.2.57, which mis-handles multibyte content in `${var//}`
+  # and `[[ str == *pat* ]]` even when the dash is sourced from a variable
+  # defined via ANSI-C quoting.
+  printf '%s' "$1" | sed "s/${EN_DASH}/-/g; s/${EM_DASH}/-/g; s/ -- / - /g"
 }
 
 matches_pattern() {
@@ -131,18 +147,15 @@ while IFS= read -r line || [ -n "$line" ]; do
     fi
     path="${entry%%:*}"
     rest="${entry#*: }"
-    rest="${rest//$EN_DASH/$EM_DASH}"
-    rest="${rest// -- / $EM_DASH }"
+    rest="$(normalize_dashes "$rest")"
     if [ -z "$path" ] || [ -z "$rest" ]; then
       malformed=1
       continue
     fi
-    if [[ "$rest" == *" $EM_DASH "* ]]; then
-      owner="${rest%% "$EM_DASH" *}"
-    elif [[ "$rest" == *" - "* ]]; then
+    if [[ "$rest" == *" - "* ]]; then
       owner="${rest%% - *}"
-    elif [[ "$rest" == *"$EM_DASH"* ]]; then
-      owner="${rest%%"$EM_DASH"*}"
+    elif [[ "$rest" == *"-"* ]]; then
+      owner="${rest%%-*}"
     else
       malformed=1
       continue
