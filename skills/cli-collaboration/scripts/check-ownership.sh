@@ -2,6 +2,20 @@
 set -u
 set -o pipefail
 
+# Force byte-mode locale. macOS ships Bash 3.2.57 whose multibyte handling
+# in `${var//pat/rep}`, `[[ str == pat ]]`, and `${var%%pat*}` is unreliable.
+# Treating all strings as raw bytes lets the dash detection below work on
+# both modern Bash 5.x and stock macOS Bash 3.2.
+export LC_ALL=C
+
+# Dash bytes defined via ANSI-C quoting so the script source has no literal
+# multibyte characters in patterns — those broke on Bash 3.2 (en-dash and
+# em-dash were not matched/substituted, owner extraction returned the whole
+# tail of the line, and the fixture tests for en-dash and glob-crosses-slash
+# both reported phantom conflicts).
+EN_DASH=$'\xe2\x80\x93'  # U+2013
+EM_DASH=$'\xe2\x80\x94'  # U+2014
+
 usage() {
   cat >&2 <<'USAGE'
 usage: check-ownership.sh [--handoff PATH] [--agent NAME] FILE...
@@ -117,18 +131,18 @@ while IFS= read -r line || [ -n "$line" ]; do
     fi
     path="${entry%%:*}"
     rest="${entry#*: }"
-    rest="${rest//–/—}"
-    rest="${rest// -- / — }"
+    rest="${rest//$EN_DASH/$EM_DASH}"
+    rest="${rest// -- / $EM_DASH }"
     if [ -z "$path" ] || [ -z "$rest" ]; then
       malformed=1
       continue
     fi
-    if [[ "$rest" == *" — "* ]]; then
-      owner="${rest%% — *}"
+    if [[ "$rest" == *" $EM_DASH "* ]]; then
+      owner="${rest%% "$EM_DASH" *}"
     elif [[ "$rest" == *" - "* ]]; then
       owner="${rest%% - *}"
-    elif [[ "$rest" == *"—"* ]]; then
-      owner="${rest%%—*}"
+    elif [[ "$rest" == *"$EM_DASH"* ]]; then
+      owner="${rest%%"$EM_DASH"*}"
     else
       malformed=1
       continue
