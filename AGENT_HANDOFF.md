@@ -1,6 +1,6 @@
 # AGENT_HANDOFF.md
 
-**Last updated:** 2026-05-20T15:00:00+02:00
+**Last updated:** 2026-05-20T15:25:00+02:00
 **Last agent:** Claude Code
 **Status:** done
 
@@ -79,6 +79,11 @@ No frozen files currently declared.
   - Manual smoke matrix on all three scripts with `-e` active: `install-skill.sh` happy paths (fresh install, unchanged re-install, update over existing, dry-run) all green; `sync-skill.sh` clean state and drift detection (non-zero exit) both green; `sync-skill.sh --install` end-to-end green; `check-ownership.sh` pass and conflict paths both green (exit 0 and exit 1 respectively).
 - Expected non-green: none currently.
 
+## Review approvals
+- Codex/ChatGPT review: approved PR #2 P3 final shape after selective-hardening realignment.
+- Gemini review: sign-off already handled separately in the project review flow.
+- Merge status: no remaining review blocker for PR #2.
+
 ## Open concerns
 - The source package and live Codex/agents/Claude/Gemini install targets are aligned as of 2026-05-19T23:51:36+02:00.
 - Install backups are preserved outside discovery paths: `/home/leospe/.codex/skills-backups`, `/home/leospe/.agents/skills-backups`, `/home/leospe/.claude/skills-backups`, `/home/leospe/.gemini/skills-backups`.
@@ -94,6 +99,7 @@ P3 is complete on branch `claude/p3-shell-hardening` and pushed. The user's auth
 Do not touch: `final-skill.md`, `workflow.md`, or `progetti-1-2.md` unless the user explicitly reassigns them.
 
 ## History
+- 2026-05-20T15:20 - Codex/ChatGPT review: Approved PR #2 P3 final shape after the selective-hardening correction. Approval covers `check-ownership.sh` using `set -u` plus `set -o pipefail`, `install-skill.sh` and `sync-skill.sh` using `set -euo pipefail`, the atomic rollback behavior in `install-skill.sh`, and the new rollback fixture. Gemini sign-off was already handled separately in the project review flow. No remaining Codex/ChatGPT blocker for merge. (done)
 - 2026-05-20T14:00 - Claude Code: P3 of the v2.3 correction plan — shell hardening + atomic install rollback. Edited Codex-owned files (`check-ownership.sh`, `install-skill.sh`, `sync-skill.sh`, new test `install-rollback-test.sh`) under explicit user supersession scoped to P3. Final shape after two review rounds on PR #2: `install-skill.sh` and `sync-skill.sh` use `set -euo pipefail`; `check-ownership.sh` keeps `set -u` and only adds `set -o pipefail` (per the deliberately selective plan, since check-ownership uses non-zero exits as normal signals). `install-skill.sh` now exits 3 with a rollback (restoring the pre-install backup) when `cp -R` fails. Rollback test green and ownership suite still 8/8 throughout. (done)
 - 2026-05-20T12:00 - Claude Code: P1 of the v2.3 correction plan — doc-honest glob semantics. Edited Codex-owned files (`README.md`, `README_IT.md`, `SKILL.md`, `codex-adapter.md`, `run-tests.sh`, new fixture `handoff-glob-crosses-slash.md`) under explicit user supersession scoped to P1. Codex and Gemini approved the plan substance before authorization. Codex review on PR #1 approved with one nit (status `done` instead of `in-progress`), applied in the follow-up commit. Fixtures green 8/8. Merged to main as commit `10c0c5a`. (done)
 - 2026-05-20T10:30 - Claude Code: Untracked internal design notes (`analisi.md`, `final-skill.md`, `workflow.md`) from Git; added them to `.gitignore`. User supersession over Codex-owned `.gitignore` and user-reserved design notes. Files preserved locally. (done)
