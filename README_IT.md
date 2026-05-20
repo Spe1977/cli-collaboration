@@ -142,7 +142,7 @@ Le operazioni distruttive sono esplicitamente vietate a meno che l'utente le ric
 
 ## Piattaforme Supportate
 
-Gli script di guardrail (`check-ownership.sh`, `install-skill.sh`, `sync-skill.sh`) e le fixture di test sono pensati per Bash su Linux e macOS (gli script usano feature Bash come `mapfile` e `[[ ... ]]` e non sono strettamente POSIX `sh`). La CI esegue sia `ubuntu-latest` sia `macos-latest` tramite GitHub Actions (`.github/workflows/ci.yml`). Windows nativo non e supportato; WSL non fa parte della matrice di test e non e garantito funzioni.
+Gli script di guardrail (`check-ownership.sh`, `install-skill.sh`, `sync-skill.sh`) e le fixture di test sono pensati per Bash su Linux e macOS (gli script usano feature Bash come `mapfile` e `[[ ... ]]` e non sono strettamente POSIX `sh`). `check-ownership.sh` delega il parsing dell'ownership a un helper Python 3 (`parse-ownership.py`); Python 3 e quindi una dipendenza a runtime del controllo di ownership (era gia dipendenza di `evals/run-mechanical-checks.sh`). La CI esegue sia `ubuntu-latest` sia `macos-latest` tramite GitHub Actions (`.github/workflows/ci.yml`). Windows nativo non e supportato; WSL non fa parte della matrice di test e non e garantito funzioni.
 
 ## Installazione
 
