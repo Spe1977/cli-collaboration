@@ -1,11 +1,11 @@
 # AGENT_HANDOFF.md
 
-**Last updated:** 2026-05-20T12:30:00+02:00
+**Last updated:** 2026-05-20T14:00:00+02:00
 **Last agent:** Claude Code
 **Status:** done
 
 ## Current task
-P1 of the v2.3 correction plan: align documentation with the parser's actual glob semantics. The parser uses `case "$path" in $pattern)`, where `*` matches `/`; previous docs claimed `scripts/*` did not cover `scripts/sub/foo.sh`, which is factually wrong. Updated `handoff-template.md`, `codex-adapter.md`, `SKILL.md`, `README.md`, and `README_IT.md`; added a pinning fixture `handoff-glob-crosses-slash.md` and a matching `run-tests.sh` case so the behavior is now a tested contract. User supersession applied for the Codex-owned files in scope (see History entry).
+P3 of the v2.3 correction plan: shell hardening for the guardrail scripts. (1) Added `set -o pipefail` to `check-ownership.sh`, `install-skill.sh`, and `sync-skill.sh`. (2) Made the install pipeline atomic: `mkdir -p` and the pre-install backup `mv` now exit 3 with an informative message on failure; if `cp -R` fails after the backup has been taken, the script automatically restores the backup so the target is never left in a half-installed state. (3) Documented the new exit code 3 in install's `usage()`. (4) Added an end-to-end rollback test (`scripts/test-fixtures/install-rollback-test.sh`) that uses a PATH-injected failing `cp` stub to deterministically trigger the rollback path and asserts target content is restored, no stale backup is left behind, and the rollback message is printed. User supersession applied for the Codex-owned files in scope (see History entry). P1 has merged to main (PR #1, merge commit `10c0c5a`); P3 was authorized separately as planned.
 
 ## Current state
 - The project is fully bootstrapped, with all Phase 1 (Codex), Phase 2 (Claude), and Phase 3 (Gemini) deliverables implemented.
@@ -65,17 +65,18 @@ P1 of the v2.3 correction plan: align documentation with the parser's actual glo
 No frozen files currently declared.
 
 ## Files changed this shift
-- skills/cli-collaboration/references/handoff-template.md: Rewrote the line 73 glob claim. Old text said `scripts/*` did not match `scripts/sub/foo.sh`; new text documents the actual bash `case`-pattern semantics (`*` crosses `/`).
-- skills/cli-collaboration/references/codex-adapter.md: Aligned the glob paragraph (line 58) with the corrected semantics.
-- skills/cli-collaboration/SKILL.md: Added a glob-semantics note to the `## Ownership` section.
-- README.md, README_IT.md: Replaced the negative-only `**` statement with a positive description of what `*` matches.
-- skills/cli-collaboration/scripts/test-fixtures/handoff-glob-crosses-slash.md: New fixture pinning the cross-slash behavior.
-- skills/cli-collaboration/scripts/test-fixtures/run-tests.sh: Added `glob-crosses-slash` case asserting exit 0 for `scripts/sub/foo.sh` under `--agent Codex`.
+- skills/cli-collaboration/scripts/check-ownership.sh: Added `set -o pipefail`.
+- skills/cli-collaboration/scripts/sync-skill.sh: Added `set -o pipefail`.
+- skills/cli-collaboration/scripts/install-skill.sh: Added `set -o pipefail`; made `mkdir -p` and the pre-install backup `mv` failures explicit and fatal with exit 3; on `cp -R` failure, the script now removes the partially-copied target (if any) and restores the backup, printing a `rollback: restored ...` line on stderr. Documented exit code 3 in `usage()`.
+- skills/cli-collaboration/scripts/test-fixtures/install-rollback-test.sh: New executable end-to-end test that PATH-shadows `cp` with a failing stub, runs `install-skill.sh`, and asserts exit 3 + restored target content + no stale backup + rollback message on stderr.
 - AGENT_HANDOFF.md: This update.
 
 ## Tests
-- Red: none — documentation alignment + one positive fixture, no behavioral change.
-- Green: `bash skills/cli-collaboration/scripts/test-fixtures/run-tests.sh` reports 8/8 passing, including the new `glob-crosses-slash` case.
+- Red: none — hardening + rollback shift; the new test (`install-rollback-test.sh`) was designed to be green on the new behavior. It would have failed against the pre-P3 install script (no rollback, no exit 3).
+- Green:
+  - `bash skills/cli-collaboration/scripts/test-fixtures/install-rollback-test.sh` → `ok - install-rollback`.
+  - `bash skills/cli-collaboration/scripts/test-fixtures/run-tests.sh` → still 8/8 passing (no regression from `pipefail`).
+  - Manual smoke of `install-skill.sh` happy paths (fresh install, unchanged re-install, update over existing, dry-run) and `sync-skill.sh` drift detection all behave as before.
 - Expected non-green: none currently.
 
 ## Open concerns
@@ -86,14 +87,15 @@ No frozen files currently declared.
 - An Italian translation `CONTRIBUTORS_IT.md` is not provided; can be added later for symmetry with `README_IT.md` if the user wants it.
 
 ## Next agent starts from
-**Next agent: User (review of PR `claude/p1-glob-docs`), then Claude Code for P3 (shell hardening + rollback in `install-skill.sh`/`sync-skill.sh`, plus `set -o pipefail` in `check-ownership.sh`).**
+**Next agent: User (review of PR for `claude/p3-shell-hardening`), then Codex/Gemini review, then merge. After P3 merges, P2/P4/P5 of the v2.3 plan remain outstanding and each requires fresh, explicitly-scoped authorization.**
 
-P1 is complete on branch `claude/p1-glob-docs` and pushed. P2–P5 of the v2.3 plan remain outstanding; the user's authorization for this shift was explicitly scoped to P1 only, so the next planned PRs require fresh authorization.
+P3 is complete on branch `claude/p3-shell-hardening` and pushed. The user's authorization for this shift was explicitly scoped to P3 only.
 
 Do not touch: `final-skill.md`, `workflow.md`, or `progetti-1-2.md` unless the user explicitly reassigns them.
 
 ## History
-- 2026-05-20T12:00 - Claude Code: P1 of the v2.3 correction plan — doc-honest glob semantics. Edited Codex-owned files (`README.md`, `README_IT.md`, `SKILL.md`, `codex-adapter.md`, `run-tests.sh`, new fixture `handoff-glob-crosses-slash.md`) under explicit user supersession scoped to P1. Codex and Gemini approved the plan substance before authorization. Codex review on PR #1 approved with one nit (status `done` instead of `in-progress`), applied in the follow-up commit. Fixtures green 8/8. (done)
+- 2026-05-20T14:00 - Claude Code: P3 of the v2.3 correction plan — shell hardening + atomic install rollback. Edited Codex-owned files (`check-ownership.sh`, `install-skill.sh`, `sync-skill.sh`, new test `install-rollback-test.sh`) under explicit user supersession scoped to P3. `set -o pipefail` standardized across the three scripts; `install-skill.sh` now exits 3 with a rollback (restoring the pre-install backup) when `cp -R` fails. Rollback test green and ownership suite still 8/8. (done)
+- 2026-05-20T12:00 - Claude Code: P1 of the v2.3 correction plan — doc-honest glob semantics. Edited Codex-owned files (`README.md`, `README_IT.md`, `SKILL.md`, `codex-adapter.md`, `run-tests.sh`, new fixture `handoff-glob-crosses-slash.md`) under explicit user supersession scoped to P1. Codex and Gemini approved the plan substance before authorization. Codex review on PR #1 approved with one nit (status `done` instead of `in-progress`), applied in the follow-up commit. Fixtures green 8/8. Merged to main as commit `10c0c5a`. (done)
 - 2026-05-20T10:30 - Claude Code: Untracked internal design notes (`analisi.md`, `final-skill.md`, `workflow.md`) from Git; added them to `.gitignore`. User supersession over Codex-owned `.gitignore` and user-reserved design notes. Files preserved locally. (done)
 - 2026-05-20T00:35 - Claude Code: Closing review pass — added CONTRIBUTORS.md crediting human + AI multi-agent collaboration (user supersession; Codex out of context); verified 7/7 fixtures; surfaced residual local backup as open concern. (done)
 - 2026-05-20T00:13 - Codex CLI: Pushed main to the dedicated GitHub repository Spe1977/cli-collaboration. (done)
