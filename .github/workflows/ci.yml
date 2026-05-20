@@ -48,8 +48,22 @@ jobs:
       - name: Show bash version
         run: bash --version
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install PyYAML
+        run: python3 -m pip install --upgrade pip pyyaml
+
       - name: Run ownership parser fixtures
         run: bash skills/cli-collaboration/scripts/test-fixtures/run-tests.sh
 
       - name: Run install rollback fixture
         run: bash skills/cli-collaboration/scripts/test-fixtures/install-rollback-test.sh
+
+      - name: Run mechanical eval checks
+        # Mechanical guards only: parser fixtures (rerun), install rollback
+        # (rerun), AGENT_HANDOFF.md structural lint, SKILL.md frontmatter.
+        # Behavioral evaluation of scenarios A-F is out of scope (LLM-judge).
+        run: bash evals/run-mechanical-checks.sh

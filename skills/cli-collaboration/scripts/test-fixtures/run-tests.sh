@@ -32,6 +32,14 @@ run_case missing-frozen-section 2 --handoff "$FIXTURES/handoff-missing-frozen-se
 run_case endash-owner 0 --handoff "$FIXTURES/handoff-endash.md" --agent Claude src/app.js
 run_case glob-crosses-slash 0 --handoff "$FIXTURES/handoff-glob-crosses-slash.md" --agent Codex scripts/sub/foo.sh
 
+# Note: the source-level regression guard that prevents literal multibyte
+# en-dash/em-dash characters from being reintroduced into check-ownership.sh
+# is intentionally NOT in this file. It lives in evals/run-mechanical-checks.sh,
+# where Python 3 is already a hard dependency. An earlier draft used
+# `grep -nP` here, which is not portable to macOS/BSD grep — moving the
+# guard out keeps this file free of GNU-grep-only flags so the fixture
+# suite runs identically on Linux and macOS without an extra dependency.
+
 rm -f "$FIXTURES"/*.out "$FIXTURES"/*.err
 
 if [ "$failures" -ne 0 ]; then

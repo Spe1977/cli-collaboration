@@ -1,6 +1,7 @@
 ---
 name: cli-collaboration
 description: "Use when multiple CLI agents or assistants alternate on the same repository — especially with a dirty worktree, an AGENT_HANDOFF.md, side-by-side CLAUDE.md/AGENTS.md/GEMINI.md, ownership notes, red tests, resume/continue requests, or any signal that another agent or the user left state you must preserve."
+version: "2.3.0"
 ---
 
 # CLI Collaboration

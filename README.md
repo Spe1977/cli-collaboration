@@ -1,5 +1,7 @@
 # cli-collaboration
 
+**Version:** 2.3.0 (see [`CHANGELOG.md`](CHANGELOG.md)).
+
 `cli-collaboration` is a lightweight protocol for coordinating Codex, Claude Code, Gemini CLI, or one agent across multiple sessions in the same project.
 
 The source of truth is `AGENT_HANDOFF.md`. Scripts are guardrails: they report drift, malformed ownership, and likely conflicts, but they do not replace agent judgment.
@@ -140,7 +142,7 @@ Destructive operations are explicitly banned unless the user asks for them:
 
 ## Supported Platforms
 
-The guardrail scripts (`check-ownership.sh`, `install-skill.sh`, `sync-skill.sh`) and the test fixtures target POSIX-compatible shells on Linux and macOS. CI exercises both `ubuntu-latest` and `macos-latest` via GitHub Actions (`.github/workflows/ci.yml`). Native Windows is not supported; WSL is not part of the test matrix and is not guaranteed to work.
+The guardrail scripts (`check-ownership.sh`, `install-skill.sh`, `sync-skill.sh`) and the test fixtures target Bash on Linux and macOS (the scripts rely on Bash features such as `mapfile` and `[[ ... ]]` and are not strictly POSIX `sh`). `check-ownership.sh` delegates the ownership parsing to a Python 3 helper (`parse-ownership.py`); Python 3 is therefore a runtime dependency of the ownership check (it was already a dependency of `evals/run-mechanical-checks.sh`). CI exercises both `ubuntu-latest` and `macos-latest` via GitHub Actions (`.github/workflows/ci.yml`). Native Windows is not supported; WSL is not part of the test matrix and is not guaranteed to work.
 
 ## Install
 
