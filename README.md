@@ -138,6 +138,10 @@ Destructive operations are explicitly banned unless the user asks for them:
 - `git checkout --`
 - lateral overwrite of files whose owner is unclear or contested
 
+## Supported Platforms
+
+The guardrail scripts (`check-ownership.sh`, `install-skill.sh`, `sync-skill.sh`) and the test fixtures target POSIX-compatible shells on Linux and macOS. CI exercises both `ubuntu-latest` and `macos-latest` via GitHub Actions (`.github/workflows/ci.yml`). Native Windows is not supported; WSL is not part of the test matrix and is not guaranteed to work.
+
 ## Install
 
 Preview the default install targets:

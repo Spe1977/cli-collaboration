@@ -138,6 +138,10 @@ Le operazioni distruttive sono esplicitamente vietate a meno che l'utente le ric
 - `git checkout --`
 - sovrascrittura laterale di file il cui owner e poco chiaro o contestato
 
+## Piattaforme Supportate
+
+Gli script di guardrail (`check-ownership.sh`, `install-skill.sh`, `sync-skill.sh`) e le fixture di test sono pensati per shell POSIX-compatibili su Linux e macOS. La CI esegue sia `ubuntu-latest` sia `macos-latest` tramite GitHub Actions (`.github/workflows/ci.yml`). Windows nativo non e supportato; WSL non fa parte della matrice di test e non e garantito funzioni.
+
 ## Installazione
 
 Anteprima dei target di installazione predefiniti:

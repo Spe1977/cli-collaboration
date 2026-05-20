@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  shellcheck:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+
+      - name: Run shellcheck on all *.sh
+        # SC2254 is excluded: check-ownership.sh deliberately uses dynamic
+        # case patterns ($pattern) as globs — that is the parser's contract,
+        # not a bug.
+        run: |
+          set -euo pipefail
+          mapfile -t scripts < <(find . -type f -name '*.sh' -not -path './.git/*' | sort)
+          if [ "${#scripts[@]}" -eq 0 ]; then
+            echo "No shell scripts found."
+            exit 0
+          fi
+          printf 'Linting %d script(s):\n' "${#scripts[@]}"
+          printf '  %s\n' "${scripts[@]}"
+          shellcheck --exclude=SC2254 "${scripts[@]}"
+
+  fixtures:
+    name: fixtures (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show bash version
+        run: bash --version
+
+      - name: Run ownership parser fixtures
+        run: bash skills/cli-collaboration/scripts/test-fixtures/run-tests.sh
+
+      - name: Run install rollback fixture
+        run: bash skills/cli-collaboration/scripts/test-fixtures/install-rollback-test.sh
