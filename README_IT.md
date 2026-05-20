@@ -1,5 +1,7 @@
 # cli-collaboration
 
+**Versione:** 2.3.0 (vedi [`CHANGELOG.md`](CHANGELOG.md)).
+
 `cli-collaboration` e un protocollo leggero per coordinare Codex, Claude Code, Gemini CLI, oppure un singolo agente attraverso piu sessioni nello stesso progetto.
 
 La fonte di verita e `AGENT_HANDOFF.md`. Gli script sono guardrail: segnalano drift, ownership malformata e probabili conflitti, ma non sostituiscono il giudizio dell'agente.
