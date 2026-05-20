@@ -70,11 +70,11 @@ done
 normalize_owner() {
   local value="$1"
   value="${value%%(*}"
-  while [[ "$value" == *[[:space:]] ]]; do
-    value="${value%[[:space:]]}"
+  while [[ "$value" == " "* ]]; do
+    value="${value# }"
   done
-  while [[ "$value" == [[:space:]]* ]]; do
-    value="${value#[[:space:]]}"
+  while [[ "$value" == *" " ]]; do
+    value="${value% }"
   done
   printf '%s' "$value"
 }
@@ -141,7 +141,7 @@ while IFS= read -r line || [ -n "$line" ]; do
       malformed=1
       continue
     fi
-    owner="${rest%%[[:space:]]*}"
+    owner="${rest%% *}"
     owner="$(normalize_owner "$owner")"
     if [ -z "$owner" ]; then
       malformed=1
