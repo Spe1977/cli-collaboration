@@ -1,11 +1,11 @@
 # AGENT_HANDOFF.md
 
-**Last updated:** 2026-05-20T10:30:00+02:00
+**Last updated:** 2026-05-20T12:00:00+02:00
 **Last agent:** Claude Code
-**Status:** done
+**Status:** in-progress
 
 ## Current task
-Repo hygiene: untracked `analisi.md`, `final-skill.md`, `workflow.md` from Git and added them to `.gitignore` so they remain only as local design notes. User supersession applied for two ownership boundaries: (a) `.gitignore` is Codex-owned but user explicitly authorized the edit; (b) `final-skill.md` and `workflow.md` are user-reserved — the user explicitly reassigned them for this single untracking action (no content was touched).
+P1 of the v2.3 correction plan: align documentation with the parser's actual glob semantics. The parser uses `case "$path" in $pattern)`, where `*` matches `/`; previous docs claimed `scripts/*` did not cover `scripts/sub/foo.sh`, which is factually wrong. Updated `handoff-template.md`, `codex-adapter.md`, `SKILL.md`, `README.md`, and `README_IT.md`; added a pinning fixture `handoff-glob-crosses-slash.md` and a matching `run-tests.sh` case so the behavior is now a tested contract. User supersession applied for the Codex-owned files in scope (see History entry).
 
 ## Current state
 - The project is fully bootstrapped, with all Phase 1 (Codex), Phase 2 (Claude), and Phase 3 (Gemini) deliverables implemented.
@@ -65,13 +65,17 @@ Repo hygiene: untracked `analisi.md`, `final-skill.md`, `workflow.md` from Git a
 No frozen files currently declared.
 
 ## Files changed this shift
-- .gitignore: Added `analisi.md`, `final-skill.md`, `workflow.md` so the internal design notes stay local-only.
-- analisi.md, final-skill.md, workflow.md: Removed from Git index (`git rm --cached`); files preserved on disk and now ignored.
-- AGENT_HANDOFF.md: End-of-shift update with supersession note and untracking record.
+- skills/cli-collaboration/references/handoff-template.md: Rewrote the line 73 glob claim. Old text said `scripts/*` did not match `scripts/sub/foo.sh`; new text documents the actual bash `case`-pattern semantics (`*` crosses `/`).
+- skills/cli-collaboration/references/codex-adapter.md: Aligned the glob paragraph (line 58) with the corrected semantics.
+- skills/cli-collaboration/SKILL.md: Added a glob-semantics note to the `## Ownership` section.
+- README.md, README_IT.md: Replaced the negative-only `**` statement with a positive description of what `*` matches.
+- skills/cli-collaboration/scripts/test-fixtures/handoff-glob-crosses-slash.md: New fixture pinning the cross-slash behavior.
+- skills/cli-collaboration/scripts/test-fixtures/run-tests.sh: Added `glob-crosses-slash` case asserting exit 0 for `scripts/sub/foo.sh` under `--agent Codex`.
+- AGENT_HANDOFF.md: This update.
 
 ## Tests
-- Red: none — repo-hygiene shift, no logic changes.
-- Green: `git check-ignore -v analisi.md final-skill.md workflow.md` confirms all three are ignored via `.gitignore`; local files still present (`ls` verified).
+- Red: none — documentation alignment + one positive fixture, no behavioral change.
+- Green: `bash skills/cli-collaboration/scripts/test-fixtures/run-tests.sh` reports 8/8 passing, including the new `glob-crosses-slash` case.
 - Expected non-green: none currently.
 
 ## Open concerns
@@ -82,13 +86,14 @@ No frozen files currently declared.
 - An Italian translation `CONTRIBUTORS_IT.md` is not provided; can be added later for symmetry with `README_IT.md` if the user wants it.
 
 ## Next agent starts from
-**Next agent: User.**
+**Next agent: User (review of PR `claude/p1-glob-docs`), then Claude Code for P3 (shell hardening + rollback in `install-skill.sh`/`sync-skill.sh`, plus `set -o pipefail` in `check-ownership.sh`).**
 
-No immediate repository action remains. Optional next steps: add a release tag, add GitHub topics, add `CONTRIBUTORS_IT.md` for Italian symmetry, clean the residual `cli-collaboration.bak-20260518T002954Z` on Claude's local install path, or start the next project.
+P1 is complete on branch `claude/p1-glob-docs` and pushed. P2–P5 of the v2.3 plan remain outstanding; the user's authorization for this shift was explicitly scoped to P1 only, so the next planned PRs require fresh authorization.
 
 Do not touch: `final-skill.md`, `workflow.md`, or `progetti-1-2.md` unless the user explicitly reassigns them.
 
 ## History
+- 2026-05-20T12:00 - Claude Code: P1 of the v2.3 correction plan — doc-honest glob semantics. Edited Codex-owned files (`README.md`, `README_IT.md`, `SKILL.md`, `codex-adapter.md`, `run-tests.sh`, new fixture `handoff-glob-crosses-slash.md`) under explicit user supersession scoped to P1. Codex and Gemini approved the plan substance before authorization. Fixtures green 8/8. (in-progress)
 - 2026-05-20T10:30 - Claude Code: Untracked internal design notes (`analisi.md`, `final-skill.md`, `workflow.md`) from Git; added them to `.gitignore`. User supersession over Codex-owned `.gitignore` and user-reserved design notes. Files preserved locally. (done)
 - 2026-05-20T00:35 - Claude Code: Closing review pass — added CONTRIBUTORS.md crediting human + AI multi-agent collaboration (user supersession; Codex out of context); verified 7/7 fixtures; surfaced residual local backup as open concern. (done)
 - 2026-05-20T00:13 - Codex CLI: Pushed main to the dedicated GitHub repository Spe1977/cli-collaboration. (done)

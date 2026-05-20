@@ -30,6 +30,7 @@ run_case user-reserved 1 --handoff "$FIXTURES/handoff-user-reserved.md" --agent 
 run_case frozen 1 --handoff "$FIXTURES/handoff-frozen.md" --agent Codex release-notes.md
 run_case missing-frozen-section 2 --handoff "$FIXTURES/handoff-missing-frozen-section.md" --agent Codex src/app.js
 run_case endash-owner 0 --handoff "$FIXTURES/handoff-endash.md" --agent Claude src/app.js
+run_case glob-crosses-slash 0 --handoff "$FIXTURES/handoff-glob-crosses-slash.md" --agent Codex scripts/sub/foo.sh
 
 rm -f "$FIXTURES"/*.out "$FIXTURES"/*.err
 

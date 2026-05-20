@@ -55,6 +55,6 @@ The `### agent-owned`, `### user-reserved`, and `### frozen` headings are all re
 
 The canonical separator is the em-dash (`—`). The parser normalizes common LLM variants (`–`, ` - `, and ` -- `) before extracting the owner, but generated handoffs should still use the canonical shape.
 
-Globs use shell pattern semantics. Recursive `**` globs are not supported in v2.2; list recursive paths explicitly. Agent names may include parenthetical annotations; the parser strips them for comparison, so `Claude (pending Phase 2)` compares as `Claude`.
+Globs use bash `case`-pattern semantics: `*` matches any sequence of characters **including `/`**, so `scripts/*` covers nested paths such as `scripts/sub/foo.sh`. Use explicit path segments when you want to scope to a single directory level. `**` is not a recognized token. Agent names may include parenthetical annotations; the parser strips them for comparison, so `Claude (pending Phase 2)` compares as `Claude`.
 
 Only one active writer should update `AGENT_HANDOFF.md` at a time. If a concurrent write is observed, record the incident in `AGENT_HANDOFF.md` history; `docs/future-architecture.md` defines when to promote the protocol to flock-based locking.
