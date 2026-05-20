@@ -1,11 +1,11 @@
 # AGENT_HANDOFF.md
 
-**Last updated:** 2026-05-20T14:00:00+02:00
+**Last updated:** 2026-05-20T14:30:00+02:00
 **Last agent:** Claude Code
 **Status:** done
 
 ## Current task
-P3 of the v2.3 correction plan: shell hardening for the guardrail scripts. (1) Added `set -o pipefail` to `check-ownership.sh`, `install-skill.sh`, and `sync-skill.sh`. (2) Made the install pipeline atomic: `mkdir -p` and the pre-install backup `mv` now exit 3 with an informative message on failure; if `cp -R` fails after the backup has been taken, the script automatically restores the backup so the target is never left in a half-installed state. (3) Documented the new exit code 3 in install's `usage()`. (4) Added an end-to-end rollback test (`scripts/test-fixtures/install-rollback-test.sh`) that uses a PATH-injected failing `cp` stub to deterministically trigger the rollback path and asserts target content is restored, no stale backup is left behind, and the rollback message is printed. User supersession applied for the Codex-owned files in scope (see History entry). P1 has merged to main (PR #1, merge commit `10c0c5a`); P3 was authorized separately as planned.
+P3 of the v2.3 correction plan: shell hardening for the guardrail scripts. (1) Set `set -euo pipefail` on `check-ownership.sh`, `install-skill.sh`, and `sync-skill.sh` (initial push only added `pipefail`; corrected to the full triplet per Codex review, since the original plan explicitly called for `-euo pipefail` and the existing explicit `if !` guards make `-e` safe additive defense). (2) Made the install pipeline atomic: `mkdir -p` and the pre-install backup `mv` now exit 3 with an informative message on failure; if `cp -R` fails after the backup has been taken, the script automatically restores the backup so the target is never left in a half-installed state. (3) Documented the new exit code 3 in install's `usage()`. (4) Added an end-to-end rollback test (`scripts/test-fixtures/install-rollback-test.sh`) that uses a PATH-injected failing `cp` stub to deterministically trigger the rollback path and asserts target content is restored, no stale backup is left behind, and the rollback message is printed. User supersession applied for the Codex-owned files in scope (see History entry). P1 has merged to main (PR #1, merge commit `10c0c5a`); P3 was authorized separately as planned.
 
 ## Current state
 - The project is fully bootstrapped, with all Phase 1 (Codex), Phase 2 (Claude), and Phase 3 (Gemini) deliverables implemented.
@@ -65,18 +65,18 @@ P3 of the v2.3 correction plan: shell hardening for the guardrail scripts. (1) A
 No frozen files currently declared.
 
 ## Files changed this shift
-- skills/cli-collaboration/scripts/check-ownership.sh: Added `set -o pipefail`.
-- skills/cli-collaboration/scripts/sync-skill.sh: Added `set -o pipefail`.
-- skills/cli-collaboration/scripts/install-skill.sh: Added `set -o pipefail`; made `mkdir -p` and the pre-install backup `mv` failures explicit and fatal with exit 3; on `cp -R` failure, the script now removes the partially-copied target (if any) and restores the backup, printing a `rollback: restored ...` line on stderr. Documented exit code 3 in `usage()`.
+- skills/cli-collaboration/scripts/check-ownership.sh: Replaced `set -u` with `set -euo pipefail`.
+- skills/cli-collaboration/scripts/sync-skill.sh: Replaced `set -u` with `set -euo pipefail`.
+- skills/cli-collaboration/scripts/install-skill.sh: Replaced `set -u` with `set -euo pipefail`; made `mkdir -p` and the pre-install backup `mv` failures explicit and fatal with exit 3; on `cp -R` failure, the script now removes the partially-copied target (if any) and restores the backup, printing a `rollback: restored ...` line on stderr. Documented exit code 3 in `usage()`.
 - skills/cli-collaboration/scripts/test-fixtures/install-rollback-test.sh: New executable end-to-end test that PATH-shadows `cp` with a failing stub, runs `install-skill.sh`, and asserts exit 3 + restored target content + no stale backup + rollback message on stderr.
 - AGENT_HANDOFF.md: This update.
 
 ## Tests
 - Red: none — hardening + rollback shift; the new test (`install-rollback-test.sh`) was designed to be green on the new behavior. It would have failed against the pre-P3 install script (no rollback, no exit 3).
-- Green:
+- Green (re-run after the `set -e` addition):
   - `bash skills/cli-collaboration/scripts/test-fixtures/install-rollback-test.sh` → `ok - install-rollback`.
-  - `bash skills/cli-collaboration/scripts/test-fixtures/run-tests.sh` → still 8/8 passing (no regression from `pipefail`).
-  - Manual smoke of `install-skill.sh` happy paths (fresh install, unchanged re-install, update over existing, dry-run) and `sync-skill.sh` drift detection all behave as before.
+  - `bash skills/cli-collaboration/scripts/test-fixtures/run-tests.sh` → 8/8 passing (no regression from `pipefail` or `-e`).
+  - Manual smoke matrix on all three scripts with `-e` active: `install-skill.sh` happy paths (fresh install, unchanged re-install, update over existing, dry-run) all green; `sync-skill.sh` clean state and drift detection (non-zero exit) both green; `sync-skill.sh --install` end-to-end green; `check-ownership.sh` pass and conflict paths both green (exit 0 and exit 1 respectively).
 - Expected non-green: none currently.
 
 ## Open concerns
@@ -94,7 +94,7 @@ P3 is complete on branch `claude/p3-shell-hardening` and pushed. The user's auth
 Do not touch: `final-skill.md`, `workflow.md`, or `progetti-1-2.md` unless the user explicitly reassigns them.
 
 ## History
-- 2026-05-20T14:00 - Claude Code: P3 of the v2.3 correction plan — shell hardening + atomic install rollback. Edited Codex-owned files (`check-ownership.sh`, `install-skill.sh`, `sync-skill.sh`, new test `install-rollback-test.sh`) under explicit user supersession scoped to P3. `set -o pipefail` standardized across the three scripts; `install-skill.sh` now exits 3 with a rollback (restoring the pre-install backup) when `cp -R` fails. Rollback test green and ownership suite still 8/8. (done)
+- 2026-05-20T14:00 - Claude Code: P3 of the v2.3 correction plan — shell hardening + atomic install rollback. Edited Codex-owned files (`check-ownership.sh`, `install-skill.sh`, `sync-skill.sh`, new test `install-rollback-test.sh`) under explicit user supersession scoped to P3. `set -euo pipefail` standardized across the three scripts (initial push omitted `-e`; corrected per Codex review on PR #2 to match the originally-planned triplet — see Tests for verification matrix). `install-skill.sh` now exits 3 with a rollback (restoring the pre-install backup) when `cp -R` fails. Rollback test green and ownership suite still 8/8 after the `-e` addition. (done)
 - 2026-05-20T12:00 - Claude Code: P1 of the v2.3 correction plan — doc-honest glob semantics. Edited Codex-owned files (`README.md`, `README_IT.md`, `SKILL.md`, `codex-adapter.md`, `run-tests.sh`, new fixture `handoff-glob-crosses-slash.md`) under explicit user supersession scoped to P1. Codex and Gemini approved the plan substance before authorization. Codex review on PR #1 approved with one nit (status `done` instead of `in-progress`), applied in the follow-up commit. Fixtures green 8/8. Merged to main as commit `10c0c5a`. (done)
 - 2026-05-20T10:30 - Claude Code: Untracked internal design notes (`analisi.md`, `final-skill.md`, `workflow.md`) from Git; added them to `.gitignore`. User supersession over Codex-owned `.gitignore` and user-reserved design notes. Files preserved locally. (done)
 - 2026-05-20T00:35 - Claude Code: Closing review pass — added CONTRIBUTORS.md crediting human + AI multi-agent collaboration (user supersession; Codex out of context); verified 7/7 fixtures; surfaced residual local backup as open concern. (done)
