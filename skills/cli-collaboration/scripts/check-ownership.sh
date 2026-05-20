@@ -79,6 +79,21 @@ normalize_owner() {
   printf '%s' "$value"
 }
 
+first_word() {
+  # Word-split via IFS instead of parameter-expansion patterns. On Bash
+  # 3.2.57 macOS, `${str%% *}` is unreliable when the string carries
+  # multibyte UTF-8 bytes (en-dash, em-dash) even with LC_ALL=C; the
+  # `set --` word-splitting path uses shell IFS tokenization and works
+  # consistently across Bash 3.2 / 4.x / 5.x.
+  local value
+  value="$(normalize_owner "$1")"
+  set -f
+  # shellcheck disable=SC2086 # intentional word splitting
+  set -- $value
+  set +f
+  printf '%s' "${1:-}"
+}
+
 matches_pattern() {
   local pattern="$1"
   local path="$2"
@@ -141,8 +156,7 @@ while IFS= read -r line || [ -n "$line" ]; do
       malformed=1
       continue
     fi
-    owner="${rest%% *}"
-    owner="$(normalize_owner "$owner")"
+    owner="$(first_word "$rest")"
     if [ -z "$owner" ]; then
       malformed=1
       continue
