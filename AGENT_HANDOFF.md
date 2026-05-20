@@ -1,11 +1,20 @@
 # AGENT_HANDOFF.md
 
-**Last updated:** 2026-05-20T15:35:00+02:00
-**Last agent:** Gemini CLI
+**Last updated:** 2026-05-20T16:00:00+02:00
+**Last agent:** Claude Code
 **Status:** done
 
 ## Current task
-P3 of the v2.3 correction plan: shell hardening for the guardrail scripts. The plan was deliberately **selective** about which scripts get `-e`: `install-skill.sh` and `sync-skill.sh` get the full `set -euo pipefail`; `check-ownership.sh` keeps `set -u` and only adds `set -o pipefail`, because that script's job is to return non-zero exit codes as normal signals (exit 1 for conflicts, exit 2 for malformed). The first push of PR #2 ignored both halves of this selectivity (only `pipefail`, no `-e`); the second push over-corrected and applied `-euo pipefail` to all three. This third push realigns to the original selective plan per Codex's second review note. (2) Made the install pipeline atomic: `mkdir -p` and the pre-install backup `mv` now exit 3 with an informative message on failure; if `cp -R` fails after the backup has been taken, the script automatically restores the backup so the target is never left in a half-installed state. (3) Documented the new exit code 3 in install's `usage()`. (4) Added an end-to-end rollback test (`scripts/test-fixtures/install-rollback-test.sh`) that uses a PATH-injected failing `cp` stub to deterministically trigger the rollback path and asserts target content is restored, no stale backup is left behind, and the rollback message is printed. User supersession applied for the Codex-owned files in scope (see History entry). P1 has merged to main (PR #1, merge commit `10c0c5a`); P3 was authorized separately as planned.
+**v2.3 transition — in progress, 2 of 5 PRs complete.** This handoff was just consolidated so a fresh Claude Code chat can resume the work without needing the prior conversation. State summary:
+
+- **P1 (doc-honest globs)** — DONE. Merged to `main` as commit `10c0c5a` (PR #1, branch `claude/p1-glob-docs`).
+- **P3 (shell hardening + atomic install rollback)** — DONE. PR #2 on branch `claude/p3-shell-hardening`, HEAD `84ff51d`, cross-CLI approved (Codex/ChatGPT + Gemini) and **awaiting user merge**. Only `AGENT_HANDOFF.md` was touched after the code/test approval (handoff-record-only commits); the approved code/test diff is unchanged.
+- **P2 (GitHub Actions CI Linux + macOS)** — pending, branch `claude/p2-ci`. Specs in `## v2.3 release plan` below.
+- **P4 (mechanical eval checks)** — pending, branch `claude/p4-mechanical-checks`. Specs in `## v2.3 release plan` below.
+- **P5 (housekeeping: version, CHANGELOG, history compact, CONTRIBUTORS_IT)** — pending, branch `claude/p5-housekeeping`. Specs in `## v2.3 release plan` below.
+- **Release tag `v2.3.0`** — pending after all PRs merge.
+
+The `## v2.3 release plan` section below is the canonical source of truth for what remains. Each pending PR requires fresh, explicitly-scoped user authorization per the project's collaboration protocol (the locked plan does not pre-authorize execution).
 
 ## Current state
 - The project is fully bootstrapped, with all Phase 1 (Codex), Phase 2 (Claude), and Phase 3 (Gemini) deliverables implemented.
@@ -167,13 +176,19 @@ Effort: 2 min.
 - An Italian translation `CONTRIBUTORS_IT.md` is not provided; can be added later for symmetry with `README_IT.md` if the user wants it.
 
 ## Next agent starts from
-**Next agent: User (review of PR for `claude/p3-shell-hardening`), then Codex/Gemini review, then merge. After P3 merges, P2/P4/P5 of the v2.3 plan remain outstanding and each requires fresh, explicitly-scoped authorization.**
+**Next agent: a fresh Claude Code session resuming the v2.3 transition.** The user will (1) merge PR #2 to `main`, then (2) open a new chat using this `AGENT_HANDOFF.md` as the entry point. This section + `## v2.3 release plan` together contain everything the next session needs.
 
-P3 is complete on branch `claude/p3-shell-hardening` and pushed. The user's authorization for this shift was explicitly scoped to P3 only.
+**Concrete next step once PR #2 is merged:**
 
-Do not touch: `final-skill.md`, `workflow.md`, or `progetti-1-2.md` unless the user explicitly reassigns them.
+1. Read `## v2.3 release plan > P2 — GitHub Actions (CI Linux + macOS) — pending` for the full specification.
+2. Wait for **explicit user authorization scoped to P2** before any code change. The v2.3 plan is locked, but per the project's collaboration protocol each PR requires its own fresh, scoped authorization.
+3. On authorization: branch from updated `main`, create `claude/p2-ci`, add `.github/workflows/ci.yml` with the two jobs specified (shellcheck + fixtures matrix on `ubuntu-latest` and `macos-latest`), document POSIX-shell support scope in `README.md` and `README_IT.md`, push, open PR for cross-CLI review.
+4. After P2 merges: continue with **P4 → P5 → tag `v2.3.0`** in the order documented in the `## v2.3 release plan > PR sequence` table. Each step needs its own scoped authorization.
+
+**Do not touch:** `final-skill.md`, `workflow.md`, or `progetti-1-2.md` unless the user explicitly reassigns them. These remain user-reserved.
 
 ## History
+- 2026-05-20T16:00 - Claude Code (handoff consolidation): Consolidated v2.3 progress into a self-contained AGENT_HANDOFF.md so a fresh Claude Code chat can resume the work without external context. Refreshed `## Current task` with per-P status, refreshed `## Next agent starts from` to point explicitly at P2 (CI/CD with GitHub Actions) as the next concrete step gated on fresh user authorization, embedded the full v2.3 release plan as a new top-level section (added in the prior commit `84ff51d`), and recorded the plan-elaboration shift at 2026-05-20T11:30 below. PR #2 (`claude/p3-shell-hardening`) HEAD now `84ff51d`; only AGENT_HANDOFF.md touched, no code or test changes — the approved P3 diff is unchanged. (done)
 - 2026-05-20T15:20 - Codex/ChatGPT review: Approved PR #2 P3 final shape after the selective-hardening correction. Approval covers `check-ownership.sh` using `set -u` plus `set -o pipefail`, `install-skill.sh` and `sync-skill.sh` using `set -euo pipefail`, the atomic rollback behavior in `install-skill.sh`, and the new rollback fixture. Gemini sign-off was already handled separately in the project review flow. No remaining Codex/ChatGPT blocker for merge. (done)
 - 2026-05-20T14:15 - Gemini CLI: Eseguita review completa cross-CLI. Convalidati e approvati i piani P1 e P3; registrato il QA pass per la transizione alla v2.3. (done)
 - 2026-05-20T14:00 - Claude Code: P3 of the v2.3 correction plan — shell hardening + atomic install rollback. Edited Codex-owned files (`check-ownership.sh`, `install-skill.sh`, `sync-skill.sh`, new test `install-rollback-test.sh`) under explicit user supersession scoped to P3. Final shape after two review rounds on PR #2: `install-skill.sh` and `sync-skill.sh` use `set -euo pipefail`; `check-ownership.sh` keeps `set -u` and only adds `set -o pipefail` (per the deliberately selective plan, since check-ownership uses non-zero exits as normal signals). `install-skill.sh` now exits 3 with a rollback (restoring the pre-install backup) when `cp -R` fails. Rollback test green and ownership suite still 8/8 throughout. (done)
