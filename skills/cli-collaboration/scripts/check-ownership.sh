@@ -79,21 +79,6 @@ normalize_owner() {
   printf '%s' "$value"
 }
 
-first_word() {
-  # Word-split via IFS instead of parameter-expansion patterns. On Bash
-  # 3.2.57 macOS, `${str%% *}` is unreliable when the string carries
-  # multibyte UTF-8 bytes (en-dash, em-dash) even with LC_ALL=C; the
-  # `set --` word-splitting path uses shell IFS tokenization and works
-  # consistently across Bash 3.2 / 4.x / 5.x.
-  local value
-  value="$(normalize_owner "$1")"
-  set -f
-  # shellcheck disable=SC2086 # intentional word splitting
-  set -- $value
-  set +f
-  printf '%s' "${1:-}"
-}
-
 matches_pattern() {
   local pattern="$1"
   local path="$2"
@@ -151,12 +136,18 @@ while IFS= read -r line || [ -n "$line" ]; do
     fi
     path="${entry%%:*}"
     rest="${entry#*:}"
-    rest="$(normalize_owner "$rest")"
     if [ -z "$path" ] || [ -z "$rest" ]; then
       malformed=1
       continue
     fi
-    owner="$(first_word "$rest")"
+    # Plan B (Gemini): delegate owner extraction to awk. Bash 3.2.57
+    # (macOS) is unreliable for any pattern/parameter-expansion op on a
+    # string carrying multibyte UTF-8 bytes, even with LC_ALL=C and pure
+    # ASCII patterns. awk under LC_ALL=C splits on whitespace using a
+    # different code path and behaves consistently across BSD and GNU.
+    # shellcheck disable=SC2016 # $1 is awk's first field, not a shell var
+    owner="$(printf '%s' "$rest" | env LC_ALL=C awk '{print $1}')"
+    owner="$(normalize_owner "$owner")"
     if [ -z "$owner" ]; then
       malformed=1
       continue
