@@ -1,8 +1,8 @@
 # AGENT_HANDOFF.md
 
-**Last updated:** 2026-05-20T12:00:00+02:00
+**Last updated:** 2026-05-20T12:30:00+02:00
 **Last agent:** Claude Code
-**Status:** in-progress
+**Status:** done
 
 ## Current task
 P1 of the v2.3 correction plan: align documentation with the parser's actual glob semantics. The parser uses `case "$path" in $pattern)`, where `*` matches `/`; previous docs claimed `scripts/*` did not cover `scripts/sub/foo.sh`, which is factually wrong. Updated `handoff-template.md`, `codex-adapter.md`, `SKILL.md`, `README.md`, and `README_IT.md`; added a pinning fixture `handoff-glob-crosses-slash.md` and a matching `run-tests.sh` case so the behavior is now a tested contract. User supersession applied for the Codex-owned files in scope (see History entry).
@@ -93,7 +93,7 @@ P1 is complete on branch `claude/p1-glob-docs` and pushed. P2–P5 of the v2.3 p
 Do not touch: `final-skill.md`, `workflow.md`, or `progetti-1-2.md` unless the user explicitly reassigns them.
 
 ## History
-- 2026-05-20T12:00 - Claude Code: P1 of the v2.3 correction plan — doc-honest glob semantics. Edited Codex-owned files (`README.md`, `README_IT.md`, `SKILL.md`, `codex-adapter.md`, `run-tests.sh`, new fixture `handoff-glob-crosses-slash.md`) under explicit user supersession scoped to P1. Codex and Gemini approved the plan substance before authorization. Fixtures green 8/8. (in-progress)
+- 2026-05-20T12:00 - Claude Code: P1 of the v2.3 correction plan — doc-honest glob semantics. Edited Codex-owned files (`README.md`, `README_IT.md`, `SKILL.md`, `codex-adapter.md`, `run-tests.sh`, new fixture `handoff-glob-crosses-slash.md`) under explicit user supersession scoped to P1. Codex and Gemini approved the plan substance before authorization. Codex review on PR #1 approved with one nit (status `done` instead of `in-progress`), applied in the follow-up commit. Fixtures green 8/8. (done)
 - 2026-05-20T10:30 - Claude Code: Untracked internal design notes (`analisi.md`, `final-skill.md`, `workflow.md`) from Git; added them to `.gitignore`. User supersession over Codex-owned `.gitignore` and user-reserved design notes. Files preserved locally. (done)
 - 2026-05-20T00:35 - Claude Code: Closing review pass — added CONTRIBUTORS.md crediting human + AI multi-agent collaboration (user supersession; Codex out of context); verified 7/7 fixtures; surfaced residual local backup as open concern. (done)
 - 2026-05-20T00:13 - Codex CLI: Pushed main to the dedicated GitHub repository Spe1977/cli-collaboration. (done)
