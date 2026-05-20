@@ -97,6 +97,7 @@ cli-collaboration/
             ├── install-skill.sh
             ├── sync-skill.sh
             ├── check-ownership.sh
+            ├── parse-ownership.py
             └── test-fixtures/
 ```
 
