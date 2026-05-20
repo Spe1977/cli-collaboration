@@ -95,10 +95,13 @@ PY
 step "5/5 check-ownership.sh source-guard"
 python3 - <<'PY'
 """Refuse literal en-dash (U+2013, bytes E2 80 93) or em-dash (U+2014,
-bytes E2 80 94) anywhere in check-ownership.sh, except on the two lines
-that define EN_DASH/EM_DASH and on comment lines that name these
-characters in prose (so the comments explaining the workaround can
-still mention them).
+bytes E2 80 94) anywhere in check-ownership.sh. The parser now ignores
+the separator entirely and extracts the first whitespace-delimited token
+after the colon as the owner, so the script source should contain no
+literal multibyte dash bytes at all. Comment lines that mention these
+characters in ASCII prose ("en-dash", "em-dash", "U+2013", "U+2014") are
+allowlisted in case a future maintainer chooses to also use a literal in
+prose; otherwise the guard treats any U+2013/U+2014 byte as a regression.
 
 This guard is what prevents the macOS Bash 3.2 multibyte-pattern bug
 from being silently reintroduced. Implemented in Python because BSD
@@ -110,8 +113,6 @@ from pathlib import Path
 
 target = Path("skills/cli-collaboration/scripts/check-ownership.sh")
 allow_substrings = (
-    "EN_DASH=",
-    "EM_DASH=",
     "multibyte",
     "en-dash",
     "em-dash",

@@ -4,17 +4,17 @@ set -o pipefail
 
 # Force byte-mode locale. macOS ships Bash 3.2.57 whose multibyte handling
 # in `${var//pat/rep}`, `[[ str == pat ]]`, and `${var%%pat*}` is unreliable.
-# Treating all strings as raw bytes lets the dash detection below work on
-# both modern Bash 5.x and stock macOS Bash 3.2.
+# Treating all strings as raw bytes keeps behavior consistent across Bash
+# 3.2 (macOS) and 5.x (Linux).
 export LC_ALL=C
 
-# Dash bytes defined via ANSI-C quoting so the script source has no literal
-# multibyte characters in patterns — those broke on Bash 3.2 (en-dash and
-# em-dash were not matched/substituted, owner extraction returned the whole
-# tail of the line, and the fixture tests for en-dash and glob-crosses-slash
-# both reported phantom conflicts).
-EN_DASH=$'\xe2\x80\x93'  # U+2013
-EM_DASH=$'\xe2\x80\x94'  # U+2014
+# Note on dash handling: the owner field can be followed by an em-dash (—),
+# en-dash (–), or ASCII hyphen and a description. Rather than try to match
+# those separators in Bash (Bash 3.2 mis-handles multibyte patterns even
+# when sourced from ANSI-C-quoted variables), the parser ignores the
+# separator entirely and extracts the first whitespace-delimited token after
+# the colon as the owner. This works for any separator without involving
+# multibyte matching in Bash or sed.
 
 usage() {
   cat >&2 <<'USAGE'
@@ -79,17 +79,6 @@ normalize_owner() {
   printf '%s' "$value"
 }
 
-normalize_dashes() {
-  # Keep all multibyte dash matching out of Bash pattern operations.
-  # BSD/GNU sed handle these byte strings consistently under LC_ALL=C;
-  # after this step, owner delimiter parsing below uses ASCII-only Bash
-  # patterns. This is the only reliable way to handle U+2013 / U+2014 on
-  # macOS Bash 3.2.57, which mis-handles multibyte content in `${var//}`
-  # and `[[ str == *pat* ]]` even when the dash is sourced from a variable
-  # defined via ANSI-C quoting.
-  printf '%s' "$1" | sed "s/${EN_DASH}/-/g; s/${EM_DASH}/-/g; s/ -- / - /g"
-}
-
 matches_pattern() {
   local pattern="$1"
   local path="$2"
@@ -146,20 +135,13 @@ while IFS= read -r line || [ -n "$line" ]; do
       continue
     fi
     path="${entry%%:*}"
-    rest="${entry#*: }"
-    rest="$(normalize_dashes "$rest")"
+    rest="${entry#*:}"
+    rest="$(normalize_owner "$rest")"
     if [ -z "$path" ] || [ -z "$rest" ]; then
       malformed=1
       continue
     fi
-    if [[ "$rest" == *" - "* ]]; then
-      owner="${rest%% - *}"
-    elif [[ "$rest" == *"-"* ]]; then
-      owner="${rest%%-*}"
-    else
-      malformed=1
-      continue
-    fi
+    owner="${rest%%[[:space:]]*}"
     owner="$(normalize_owner "$owner")"
     if [ -z "$owner" ]; then
       malformed=1
