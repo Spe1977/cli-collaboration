@@ -48,6 +48,12 @@ Slash command come `/cli-collaboration on` e `/cli-collaboration off` sono utili
 
 La pausa riduce solo l'overhead procedurale. Non autorizza mai pulizia distruttiva, sovrascrittura del lavoro altrui o ignorare ownership `user-reserved` e `frozen`.
 
+## Workflow Non-Code
+
+Il caso d'uso primario resta la collaborazione su repository. Lo stesso protocollo di handoff puo coordinare anche workflow non-code espliciti, come brainstorming multi-LLM, sintesi di ricerca, dibattito strutturato, revisione editoriale o confronto tra modelli.
+
+Per il brainstorming multi-LLM, inizia con una cartella topic che contiene solo `brainstorming.md`. Il primo agente legge quel seed file, crea `AGENT_HANDOFF.md`, scrive il primo turno e aggiorna l'handoff. Vedi `skills/cli-collaboration/references/alternate-workflows.md`.
+
 ## Come E Stato Sviluppato
 
 Il pacchetto e stato costruito intenzionalmente facendo dogfooding del protocollo che fornisce.
@@ -87,6 +93,7 @@ cli-collaboration/
         │   ├── openai.yaml
         │   └── claude.yaml
         ├── references/
+        │   ├── alternate-workflows.md
         │   ├── codex-adapter.md
         │   ├── claude-adapter.md
         │   ├── gemini-adapter.md

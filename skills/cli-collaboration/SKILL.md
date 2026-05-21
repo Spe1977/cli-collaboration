@@ -1,6 +1,6 @@
 ---
 name: cli-collaboration
-description: "Use when multiple CLI agents or assistants alternate on the same repository — especially with a dirty worktree, an AGENT_HANDOFF.md, side-by-side CLAUDE.md/AGENTS.md/GEMINI.md, ownership notes, red tests, resume/continue requests, or any signal that another agent or the user left state you must preserve."
+description: "Use when multiple CLI agents or assistants alternate on the same repository or explicit shared handoff workflow — especially with a dirty worktree, an AGENT_HANDOFF.md, side-by-side CLAUDE.md/AGENTS.md/GEMINI.md, ownership notes, red tests, resume/continue requests, or any signal that another agent or the user left state you must preserve."
 version: "2.3.0"
 ---
 
@@ -32,6 +32,10 @@ If you cannot fill a field, read more or ask. Do not improvise.
 ## Bootstrap Without Handoff
 
 If no handoff exists, create or propose `AGENT_HANDOFF.md` before normal work. Include the user's request, current path, `git status --short --branch` if available, declared ownership, and the next concrete action. Mark it as bootstrap state, not authoritative history.
+
+If `AGENT_HANDOFF.md` is missing but a known workflow seed file such as `brainstorming.md` exists in the same folder, read that seed file before creating a generic handoff. Follow its bootstrap instructions to create the initial `AGENT_HANDOFF.md`.
+
+For alternate workflows such as multi-LLM brainstorming, load `references/alternate-workflows.md` only when the user explicitly asks for that workflow, the handoff declares it, or a known seed file declares it.
 
 ## Ownership
 

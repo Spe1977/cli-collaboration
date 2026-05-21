@@ -4,6 +4,17 @@ All notable changes to `cli-collaboration` are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project follows semantic versioning where it makes sense for a protocol-and-scripts package.
 
+## [Unreleased]
+
+### Added
+
+- Documented multi-LLM brainstorming as a supported non-code handoff workflow.
+- Added `references/alternate-workflows.md` with a complete `brainstorming.md` seed template and bootstrap behavior for creating `AGENT_HANDOFF.md`.
+
+### Changed
+
+- Clarified that repository collaboration remains the primary use case, while explicit handoff workflows can reuse the same protocol for non-code turn-taking.
+
 ## [2.3.0] — 2026-05-20
 
 This release tightens the gap between the documented protocol and the actual behavior of the guardrail scripts, adds continuous integration, makes the install path crash-safe, and adds mechanical structural checks for `AGENT_HANDOFF.md` and `SKILL.md`.

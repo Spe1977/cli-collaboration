@@ -4,6 +4,8 @@ Copy this skeleton into the root of a project that does not yet have an `AGENT_H
 
 The structure below is the contract parsed by `scripts/check-ownership.sh`. Keep the section names, the ownership line shape, and the `## File ownership` heading exactly as shown.
 
+For non-code workflows, keep the same handoff discipline. Test fields may be replaced with explicit validation notes or `no test: non-code workflow`, but file/section scope, reserved areas, and stop condition remain mandatory.
+
 ---
 
 ```markdown

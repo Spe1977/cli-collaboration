@@ -1,16 +1,31 @@
 # AGENT_HANDOFF.md
 
-**Last updated:** 2026-05-21T08:15:02+02:00
-**Last agent:** Gemini CLI
+**Last updated:** 2026-05-21T22:42:22+02:00
+**Last agent:** Codex
 **Status:** done
 
 ## Current task
-Recreated root-level `GEMINI.md` and `CLAUDE.md` files in the updated `v2.3.0` workspace to ensure compliance with global project context rules.
+Commit and push the documentation-only `brainplan.md` integration to `origin/main`.
 
 ## Current state
-- Root-level context files `GEMINI.md` (Gemini-owned) and `CLAUDE.md` (Claude-owned) have been successfully recreated and staged in the updated `v2.3.0` codebase.
-- The project is fully complete and all mechanical/test suites are 100% green.
-- No conflicts found during the transition.
+- Gemini CLI reviewed `brainplan.md` and approved the documentation-only integration.
+- Claude Code reviewed `brainplan.md` and approved it, with five implementation recommendations recorded below under `## Claude Code review notes`.
+- Codex implemented the integration: new `alternate-workflows.md`, minimal `SKILL.md` routing, README/README_IT pointers, handoff-template note, and changelog entry.
+- Codex reran `bash evals/run-mechanical-checks.sh`; all 5/5 checks passed.
+- User requested commit and push to `origin/main`; `main` is the current local branch and `origin` points to `https://github.com/Spe1977/cli-collaboration.git`.
+- Technical scripts, fixtures, parser behavior, CI/eval wiring, and canonical repository-collaboration protocol were not changed.
+- Existing untracked file `cli-collaboration.png` was present before this shift, remains unrelated, and is intentionally excluded from the commit.
+
+## Claude Code review notes (for Codex implementation)
+Approval is unconditional, but the following nuances should be honored during implementation to keep the change as narrow as `brainplan.md` declares:
+
+1. **SKILL.md description scope.** Keep the frontmatter description anchored to "repository **or explicit shared handoff workflow**" — do not generalize to "non-code". The trigger must stay scoped to declared workflows so normal repo work is not affected.
+2. **Bootstrap rule wording (SKILL.md).** Write the seed-file rule generically — e.g. *"a known workflow seed file such as `brainstorming.md`"* — and tie it to the seed file being present in the **same folder as the missing `AGENT_HANDOFF.md`**. This way future seeds can be added by editing only `references/alternate-workflows.md`, never `SKILL.md` again.
+3. **`alternate-workflows.md` scope.** Include only the full `brainstorming.md` template for now. Other patterns (research synthesis, structured debate, editorial review, model comparison) should be mentioned in a short closing paragraph **without templates**, to prevent scope creep.
+4. **Embedded `AGENT_HANDOFF.md` bootstrap template.** Must reuse the canonical field names and the exact ownership line shape `- <path>: <agent> — <reason>` so `check-ownership.sh` / `parse-ownership.py` keep working unchanged. Any deviation here silently breaks the guardrail.
+5. **`handoff-template.md` note.** The optional 2-line note proposed in `brainplan.md` is welcome: it helps readers who land on the canonical template first, and it keeps the non-code detail isolated in `alternate-workflows.md`. Recommend including it.
+
+These notes answer the three "Open concerns" raised by Codex in the previous shift; they can now be closed once Codex implements per `brainplan.md` + the notes above.
 
 ## File ownership
 ### agent-owned
@@ -20,6 +35,7 @@ Recreated root-level `GEMINI.md` and `CLAUDE.md` files in the updated `v2.3.0` w
 - evals/evals.json: Codex — technical eval wiring for scenarios A-F
 - skills/cli-collaboration/agents/openai.yaml: Codex — OpenAI metadata
 - skills/cli-collaboration/references/codex-adapter.md: Codex — Codex-specific adapter notes and script ABI
+- skills/cli-collaboration/references/alternate-workflows.md: Codex — explicit non-code handoff workflow reference
 - examples/AGENTS.md: Codex — Codex/AGENTS project guidance example
 - README.md: Codex — package entry point, install commands, release gates
 - README_IT.md: Codex — Italian package entry point translation
@@ -40,6 +56,7 @@ Recreated root-level `GEMINI.md` and `CLAUDE.md` files in the updated `v2.3.0` w
 - docs/future-architecture.md: Claude — v3 thresholds and sidecar policy
 - examples/GEMINI.md: Gemini — Gemini project guidance example
 - skills/cli-collaboration/references/gemini-adapter.md: Gemini — Gemini adapter notes
+- brainplan.md: Codex — review plan for brainstorming workflow documentation integration
 
 ### user-reserved
 - final-skill.md: user — approved source specification
@@ -50,27 +67,34 @@ Recreated root-level `GEMINI.md` and `CLAUDE.md` files in the updated `v2.3.0` w
 No frozen files currently declared.
 
 ## Files changed this shift
-- CLAUDE.md: Recreated to summarize context in the project root.
-- GEMINI.md: Recreated to summarize context in the project root.
-- AGENT_HANDOFF.md: Updated with current shift log and file ownership declaration.
+- brainplan.md: Added the reviewed implementation plan for the documentation-only brainstorming workflow integration.
+- skills/cli-collaboration/references/alternate-workflows.md: Added alternate workflow reference with the full `brainstorming.md` seed template and bootstrap `AGENT_HANDOFF.md` template.
+- skills/cli-collaboration/SKILL.md: Narrowly extended activation to repositories or explicit shared handoff workflows and added generic seed-file bootstrap routing.
+- README.md: Added concise non-code workflow section and package tree entry for `alternate-workflows.md`.
+- README_IT.md: Added Italian mirror of the non-code workflow section and package tree entry.
+- skills/cli-collaboration/references/handoff-template.md: Added the approved two-line note for non-code workflow handoff discipline.
+- CHANGELOG.md: Added an Unreleased documentation-only entry for multi-LLM brainstorming workflow support.
+- AGENT_HANDOFF.md: Recorded Codex implementation, commit/push preparation, verification results, and next-agent state.
 
 ## Tests
 - Red: none.
-- Green:
-  - `./skills/cli-collaboration/scripts/test-fixtures/run-tests.sh` → 8/8 green.
-  - `./evals/run-mechanical-checks.sh` → 5/5 green (structural tests, handoff linter, frontmatter check, and source guard).
+- Green: `bash evals/run-mechanical-checks.sh` — all 5/5 mechanical checks passed.
 
 ## Open concerns
-- None. The v2.3.0 repository is fully aligned with origin, all test suites pass flawlessly, and context-summarizer files are active.
+- No script behavior was changed; any future expansion beyond brainstorming should add real workflow evidence before adding more templates.
+- `cli-collaboration.png` remains an unrelated untracked file from before this shift and is intentionally not staged.
 
 ## Next agent starts from
-**Next agent: User.**
+**Next agent: task-fit decides — after the current commit/push, start from `origin/main`; no documentation integration follow-up is pending.**
 
-No immediate repository action remains. The workspace is perfectly clean and synchronized with origin/main.
-
-Do not touch: `final-skill.md`, `workflow.md`, or `progetti-1-2.md` unless the user explicitly reassigns them. These remain user-reserved.
+Do not touch: `final-skill.md`, `workflow.md`, or `progetti-1-2.md` (user-reserved). Do not touch `cli-collaboration.png`; it was already untracked before this shift and is unrelated. Do not modify `scripts/`, `scripts/test-fixtures/`, `parse-ownership.py`, or `evals/evals.json` for this documentation-only integration.
 
 ## History
+- 2026-05-21T22:42:22+02:00 - Codex: Prepared the reviewed `brainplan.md` documentation-only integration for commit and push to `origin/main`. Reran `bash evals/run-mechanical-checks.sh` with all 5/5 checks green. Included `brainplan.md`, `alternate-workflows.md`, README/README_IT, `SKILL.md`, `handoff-template.md`, CHANGELOG, and this handoff update; intentionally excluded unrelated pre-existing `cli-collaboration.png`. (done)
+- 2026-05-21T22:33:34+02:00 - Codex: Implemented `brainplan.md` after Gemini/Claude approval. Added `references/alternate-workflows.md` with the full brainstorming seed template and bootstrap handoff template; minimally updated `SKILL.md` routing; added README/README_IT pointers, handoff-template note, and Unreleased changelog entry. User explicitly authorized the two Claude-owned cross-edits. Ran `bash evals/run-mechanical-checks.sh` with all 5/5 checks green. No scripts, fixtures, parser behavior, or eval wiring changed. (done)
+- 2026-05-21T22:25:29+02:00 - Claude Code: Reviewed `brainplan.md` and approved the documentation-only integration. Added `## Claude Code review notes` with five implementation nuances (SKILL.md description scope, generic seed-file wording, alternate-workflows scope discipline, canonical handoff-template reuse for the bootstrap embed, optional handoff-template note). Closed Codex's three Open concerns by mapping them to review notes. Refreshed Next agent section with a concrete ordered implementation checklist for Codex. No code, scripts, or fixtures touched. Shift marked done. (done)
+- 2026-05-21T22:20:50+02:00 - Gemini CLI: Reviewed `brainplan.md` and approved the documentation-only integration for multi-LLM brainstorming workflows. Answered the five review questions. Shift marked done. (done)
+- 2026-05-21T22:16:07+02:00 - Codex: Added `brainplan.md`, a review-oriented plan for integrating multi-LLM brainstorming as a documentation-only non-code workflow application of `cli-collaboration`. Updated this handoff to mark review as the next step for Gemini/Claude. No scripts, fixtures, or implementation files changed; tests not run because this is a planning handoff only. (in-progress)
 - 2026-05-21T08:15:02+02:00 - Gemini CLI: Recreated root-level `GEMINI.md` and `CLAUDE.md` files in the updated `v2.3.0` workspace and registered them in agent ownership. (done)
 - 2026-05-21T02:30 - Claude Code: **Post-merge cleanup of PR #4.** PR #4 merged to `main` as `814ee88` (2026-05-20T22:22:34Z) — all five planned PRs are now on `main` and the v2.3 transition is complete code-wise. Codex post-merge audit caught two leftover doc disalignments: (a) `AGENT_HANDOFF.md` on `main` was still in `Status: in-progress` with P4/P5 marked "awaiting review/merge" and the PR sequence table rows 4 and 5 stale; (b) `README.md` / `README_IT.md` `## Package Structure` / `## Struttura Del Pacchetto` script tree did not list the new `parse-ownership.py`. Both fixed in this shift on branch `claude/post-merge-doc-cleanup` off `origin/main`: `AGENT_HANDOFF.md` updated to `Status: release-ready`; `## Current task`, `## v2.3 release plan`, PR sequence table, and `## Open concerns` refreshed to reflect that PR #4 is merged; `## Next agent starts from` rewritten to describe the only remaining step (the `v2.3.0` tag); `parse-ownership.py` added to both README package trees. Local verification: `run-tests.sh` 8/8 green; `run-mechanical-checks.sh` 5/5 green. (in-progress)
 - 2026-05-21T02:15 - Claude Code: Documentation fidelity follow-up to Plan C, triggered by user audit ("hai aggiornato e ben documentato le modifiche e le soluzioni trovate, sia nella documentazione della skill che nel file HANDOFF?"). Two doc gaps identified and fixed: (a) `skills/cli-collaboration/references/codex-adapter.md > ## Script ABI` did not mention that `check-ownership.sh` now delegates to Python 3 — added an "Implementation note (v2.3.0)" capturing the Plan C migration; the same file's `## Ownership Format` paragraph described the prior normalize-then-match mechanism which no longer exists — rewrote it to state that the v2.3.0+ parser extracts the first whitespace-delimited token after the colon and accepts any separator interchangeably. (b) `CHANGELOG.md` v2.3.0 entry was written before the eight-shift saga and made no mention of the parser migration — added the new `parse-ownership.py` under `### Added` and a long `### Changed` entry summarizing the macOS Bash 3.2.57 multibyte issue, the seven failed Bash-side mitigations, the eighth Python migration that landed, the runtime dependency, and the preserved CLI contract. Adapters for Claude and Gemini were checked and left as-is because they only reference the public CLI contract (which is unchanged). `SKILL.md` was likewise checked and left as-is for the same reason. Local verification: `run-tests.sh` 8/8 green; `run-mechanical-checks.sh` 5/5 green. (in-progress)
