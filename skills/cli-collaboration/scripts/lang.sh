@@ -18,7 +18,7 @@ read_field() {
   [ -f "$file" ] || return 1
   line="$(grep -m1 "\"$field\"[[:space:]]*:" "$file" 2>/dev/null)" || true
   [ -n "$line" ] || return 0
-  val="${line#*\"$field\"}"               # drop everything up to and incl. "field"
+  val="${line#*\""$field"\"}"               # drop everything up to and incl. "field"
   val="${val#*:}"                          # drop the colon separator
   val="${val#"${val%%[![:space:]]*}"}"     # ltrim spaces before the value
   val="${val#\"}"                          # drop the opening quote

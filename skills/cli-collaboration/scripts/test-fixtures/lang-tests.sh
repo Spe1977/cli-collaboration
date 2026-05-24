@@ -128,6 +128,7 @@ cleanup_home
 
 # set_by has no public getter, so exercise read_field directly by sourcing.
 new_home
+# shellcheck source=/dev/null
 by_read="$( . "$LANG_SH"; cmd_set 'Klingon' --by 'Q"R\S' >/dev/null 2>&1; read_field set_by )"
 assert_eq "json-escaped-setby-roundtrip" 'Q"R\S' "$by_read"
 cleanup_home

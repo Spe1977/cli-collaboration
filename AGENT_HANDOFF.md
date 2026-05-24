@@ -1,18 +1,18 @@
 # AGENT_HANDOFF.md
 
-**Last updated:** 2026-05-24T23:42:00+02:00
+**Last updated:** 2026-05-24T23:45:00+02:00
 **Last agent:** Gemini CLI
 **Status:** done
 
 ## Current task
-Inizializzare il repository locale Git, eseguire il commit dei file esistenti della versione 2.4.0 (Language Preference) ed eseguire il push con merge sul main nel repository remoto GitHub.
+Risolvere i due avvertimenti di ShellCheck (SC2295 e SC1090) segnalati dal CI su GitHub Actions.
 
 ## Current state
-- Inizializzato correttamente il repository locale ripristinando il folder `.git` originale che era stato erroneamente lasciato all'interno della cartella `evals/`.
-- Verificato lo stato dei file modificati e non tracciati relativi al rilascio della versione 2.4.0 (Language Preference).
-- Eseguito con successo tutti i test meccanici (`evals/run-mechanical-checks.sh` -> 5/5 green) e i test sulle preferenze di lingua (`lang-tests.sh` -> 24/24 green).
-- Eseguito il commit di tutte le modifiche locali e dei nuovi script della versione 2.4.0 sul branch `main`.
-- Effettuato il push con successo sul branch `main` del repository remoto origin (`https://github.com/Spe1977/cli-collaboration.git`).
+- Risolti i due avvisi di linting statico emessi da ShellCheck nel CI di GitHub Actions:
+  1. SC2295 in `lang.sh` (riferimento a pattern/glob) risolto quotando separatamente l'espansione `$field`.
+  2. SC1090 in `lang-tests.sh` (sourcing non costante) risolto inserendo la direttiva `# shellcheck source=/dev/null` appropriata.
+- Verificato con successo il superamento locale di tutti i test meccanici (`evals/run-mechanical-checks.sh` -> 5/5 green) e funzionali delle lingue (`lang-tests.sh` -> 24/24 green).
+- Eseguito il commit e il push delle correzioni sul branch `main` di GitHub.
 
 ## File ownership
 ### agent-owned
@@ -81,6 +81,7 @@ No frozen files currently declared.
 Do not touch: `final-skill.md`, `workflow.md`, or `progetti-1-2.md` (user-reserved). Do not touch `cli-collaboration.png`; it was already untracked before this shift and is unrelated.
 
 ## History
+- 2026-05-24T23:45:00+02:00 - Gemini CLI: Risolto avvisi ShellCheck (SC2295 e SC1090) segnalati da GitHub CI in lang.sh and lang-tests.sh, verificati i test verdi locali ed eseguito il push su main. (done)
 - 2026-05-24T23:42:00+02:00 - Gemini CLI: Inizializzato il repository locale Git ripristinando il folder `.git` originale da `evals/.git` alla radice del workspace, verificato lo stato con i test passanti (5/5 mechanical checks e 24/24 lang tests verdi), eseguito il commit di tutte le modifiche locali della v2.4.0 ed effettuato il push con successo sul branch `main` del repository remoto GitHub (`Spe1977/cli-collaboration`). (done)
 - 2026-05-24T23:28:29+02:00 - Claude Code: Updated the repository source from 2.3.0 to 2.4.0 to match the installed copy at `~/.claude/skills/cli-collaboration` (inverse of the prior repo→installed syncs). The 2.4.0 delta is the **Language Preference** feature: synced `SKILL.md` (version bump + `## Language Preference` section), `references/{claude,codex,gemini}-adapter.md` (documentary notes), `scripts/install-skill.sh`, `scripts/sync-skill.sh` (new Gemini home target), plus new `scripts/lang.sh` and `scripts/test-fixtures/lang-tests.sh`, via `rsync -av` (installed→repo). Reviewed the pre-sync content diff first (only version bump + language feature + Gemini target). Under explicit user authorization, bumped the repo-root release docs that the installed copy does not carry: `README.md`/`README_IT.md` version line and a new `CHANGELOG.md [2.4.0]` entry (also promoting the prior `Unreleased` brainstorming items). Edited Codex-owned and Gemini-owned files under User Supersession (noted in Open concerns). Verified `diff -qr` (no diff), `evals/run-mechanical-checks.sh` (5/5 green), `lang-tests.sh` (24/24 green). (done)
 - 2026-05-21T23:32:08+02:00 - Claude Code: Synchronized `/home/leospe/.claude/skills/cli-collaboration` with the repository source via `rsync -av --delete`. Three files differed before sync (SKILL.md, references/handoff-template.md, and the new references/alternate-workflows.md from the brainplan integration). Pre-existing backup at `~/.claude/skills-backups/cli-collaboration.backup.20260519235128` was already outside the discovery path, no moves required. Verified with `diff -qr` (no diff) and `bash evals/run-mechanical-checks.sh` (5/5 green). All four installed CLI copies (Codex, Agents, Gemini, Claude) are now aligned with the repo. (done)
