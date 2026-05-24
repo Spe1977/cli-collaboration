@@ -9,6 +9,7 @@ Installs the cli-collaboration skill directory into explicit targets. If no
 target is supplied, defaults to:
   ${CODEX_HOME:-$HOME/.codex}/skills/cli-collaboration
   ${AGENTS_HOME:-$HOME/.agents}/skills/cli-collaboration
+  ${GEMINI_HOME:-$HOME/.gemini}/skills/cli-collaboration
 
 Exit codes:
   0  install completed (or unchanged) for every target
@@ -51,6 +52,7 @@ done
 if [ "${#targets[@]}" -eq 0 ]; then
   targets+=("${CODEX_HOME:-$HOME/.codex}/skills/cli-collaboration")
   targets+=("${AGENTS_HOME:-$HOME/.agents}/skills/cli-collaboration")
+  targets+=("${GEMINI_HOME:-$HOME/.gemini}/skills/cli-collaboration")
 fi
 
 for target in "${targets[@]}"; do

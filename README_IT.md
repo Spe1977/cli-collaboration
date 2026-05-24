@@ -1,6 +1,6 @@
 # cli-collaboration
 
-**Versione:** 2.3.0 (vedi [`CHANGELOG.md`](CHANGELOG.md)).
+**Versione:** 2.4.0 (vedi [`CHANGELOG.md`](CHANGELOG.md)).
 
 `cli-collaboration` e un protocollo leggero per coordinare Codex, Claude Code, Gemini CLI, oppure un singolo agente attraverso piu sessioni nello stesso progetto.
 

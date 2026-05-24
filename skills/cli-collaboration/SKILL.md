@@ -1,7 +1,7 @@
 ---
 name: cli-collaboration
 description: "Use when multiple CLI agents or assistants alternate on the same repository or explicit shared handoff workflow — especially with a dirty worktree, an AGENT_HANDOFF.md, side-by-side CLAUDE.md/AGENTS.md/GEMINI.md, ownership notes, red tests, resume/continue requests, or any signal that another agent or the user left state you must preserve."
-version: "2.3.0"
+version: "2.4.0"
 ---
 
 # CLI Collaboration
@@ -13,6 +13,31 @@ Use a written handoff as the source of truth when CLI agents, or one agent acros
 Read `AGENT_HANDOFF.md` before interpreting `git status`. Never infer ownership from a dirty worktree alone.
 
 If collaboration is paused via `.cli-collaboration-off` or `Status: paused` in the handoff, still preserve existing work and ask before touching shared files.
+
+## Language Preference
+
+Run this once, as the final step of the activation cycle, so the whole session
+(and every later activation, by any agent) speaks the user's chosen language.
+The preference lives in one global file:
+`${XDG_CONFIG_HOME:-$HOME/.config}/cli-collaboration/config.json`.
+
+1. Run `scripts/lang.sh get`.
+2. **If it prints a value (exit 0):** continue the session in that language. Do
+   not ask again.
+3. **If it exits non-zero (not configured):** ask the user, in English:
+   `Choose your language:` — then run
+   `scripts/lang.sh set "<user's answer>" --by <YOUR_AGENT_NAME>` and continue in
+   that language from then on.
+
+The script never prompts on its own — in a CLI-LLM session there is no TTY, so
+**you** (the LLM) mediate the prompt in chat. To change the language later, the
+user runs `scripts/lang.sh set "<new>" --force`. Non-interactive runs (CI) use
+`scripts/lang.sh ensure-noninteractive`, which reads `CLI_COLLAB_LANG` or falls
+back to `en`.
+
+> **Scope note:** this honors the language at each skill activation, not in
+> every unrelated conversation. Projecting the preference into each agent's
+> native memory (`CLAUDE.md`/`GEMINI.md`/`AGENTS.md`) is a deferred Phase 2.
 
 ## Start Gate
 

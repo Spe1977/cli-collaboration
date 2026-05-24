@@ -118,3 +118,11 @@ Script ABI is owned by Codex and documented in `references/codex-adapter.md`. Do
 ## Single-Session Variant
 
 Even when Claude Code is the only CLI used on a project, install the skill and maintain `AGENT_HANDOFF.md`. The handoff functions as cross-session project memory: the next Claude Code session reads it and resumes precisely instead of re-deriving state from `git log` and file inspection.
+
+## Language Preference (documentary)
+
+This adapter does not execute anything. The binding behavior lives in
+`SKILL.md` → `## Language Preference`. As the final step of activation, run
+`scripts/lang.sh get`; if unset, ask `Choose your language:` in English and run
+`scripts/lang.sh set "<answer>" --by CLAUDE`. The global config is at
+`${XDG_CONFIG_HOME:-$HOME/.config}/cli-collaboration/config.json`.

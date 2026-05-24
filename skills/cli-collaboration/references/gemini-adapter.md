@@ -78,3 +78,11 @@ Script ABI is owned by Codex and documented in `references/codex-adapter.md`.
 ## Single-Session Variant
 
 Even when Gemini CLI is the only CLI used on a project, install the skill and maintain `AGENT_HANDOFF.md`. The handoff functions as cross-session project memory, ensuring the agent resumes its exact thought process and state across restarts.
+
+## Language Preference (documentary)
+
+This adapter does not execute anything. The binding behavior lives in
+`SKILL.md` → `## Language Preference`. As the final step of activation, run
+`scripts/lang.sh get`; if unset, ask `Choose your language:` in English and run
+`scripts/lang.sh set "<answer>" --by GEMINI`. The global config is at
+`${XDG_CONFIG_HOME:-$HOME/.config}/cli-collaboration/config.json`.

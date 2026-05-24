@@ -6,13 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [2.4.0] — 2026-05-24
+
+This release adds a per-user **Language Preference** so every skill activation — by any CLI agent — speaks the user's chosen language, and promotes the previously unreleased multi-LLM brainstorming workflow to a tagged release.
+
 ### Added
 
+- **Language Preference**: new `skills/cli-collaboration/scripts/lang.sh` persists the user's chosen language in a single global config at `${XDG_CONFIG_HOME:-$HOME/.config}/cli-collaboration/config.json` (file mode `0600`, dir mode `0700`). It runs as the final step of the activation cycle: `lang.sh get` returns the language (exit 0) or exits non-zero when unset, in which case the agent asks `Choose your language:` in English and runs `lang.sh set "<answer>" --by <AGENT>`. Later changes use `--force`; CI/non-interactive runs use `ensure-noninteractive` (reads `CLI_COLLAB_LANG`, falls back to `en`). Documented in a new `## Language Preference` section of `SKILL.md` and as documentary notes in `references/{claude,codex,gemini}-adapter.md`.
+- **lang.sh self-tests**: new `skills/cli-collaboration/scripts/test-fixtures/lang-tests.sh` (24 cases) covering get/set/`--force`, `--by` attribution, `ensure-noninteractive` env + `en` fallback, `0600`/`0700` permission modes, label normalization, and JSON escaping of hostile input.
 - Documented multi-LLM brainstorming as a supported non-code handoff workflow.
 - Added `references/alternate-workflows.md` with a complete `brainstorming.md` seed template and bootstrap behavior for creating `AGENT_HANDOFF.md`.
 
 ### Changed
 
+- **Gemini sync target**: `sync-skill.sh` now also installs to the Gemini skills home (`${GEMINI_HOME:-$HOME/.gemini}/skills/cli-collaboration`) alongside the existing targets.
 - Clarified that repository collaboration remains the primary use case, while explicit handoff workflows can reuse the same protocol for non-code turn-taking.
 
 ## [2.3.0] — 2026-05-20

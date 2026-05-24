@@ -44,6 +44,7 @@ done
 if [ "${#targets[@]}" -eq 0 ]; then
   targets+=("${CODEX_HOME:-$HOME/.codex}/skills/cli-collaboration")
   targets+=("${AGENTS_HOME:-$HOME/.agents}/skills/cli-collaboration")
+  targets+=("${GEMINI_HOME:-$HOME/.gemini}/skills/cli-collaboration")
 fi
 
 drift=0

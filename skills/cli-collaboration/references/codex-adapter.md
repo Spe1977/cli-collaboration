@@ -59,3 +59,11 @@ The canonical separator is the em-dash (`—`). The parser (v2.3.0+, Python) ext
 Globs use bash `case`-pattern semantics: `*` matches any sequence of characters **including `/`**, so `scripts/*` covers nested paths such as `scripts/sub/foo.sh`. Use explicit path segments when you want to scope to a single directory level. `**` is not a recognized token. Agent names may include parenthetical annotations; the parser strips them for comparison, so `Claude (pending Phase 2)` compares as `Claude`.
 
 Only one active writer should update `AGENT_HANDOFF.md` at a time. If a concurrent write is observed, record the incident in `AGENT_HANDOFF.md` history; `docs/future-architecture.md` defines when to promote the protocol to flock-based locking.
+
+## Language Preference (documentary)
+
+This adapter does not execute anything. The binding behavior lives in
+`SKILL.md` → `## Language Preference`. As the final step of activation, run
+`scripts/lang.sh get`; if unset, ask `Choose your language:` in English and run
+`scripts/lang.sh set "<answer>" --by CODEX`. The global config is at
+`${XDG_CONFIG_HOME:-$HOME/.config}/cli-collaboration/config.json`.

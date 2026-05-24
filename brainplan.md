@@ -24,6 +24,20 @@ This is a documentation-only change. It should not alter:
 - CI/eval mechanics
 - the canonical repository-collaboration protocol
 
+## Optional Future Note: Bounded Handoff Memory
+
+If future work addresses oversized `AGENT_HANDOFF.md` files, treat that as a separate design track from this brainstorming workflow integration.
+
+The preferred direction is:
+
+- Keep `AGENT_HANDOFF.md` as portable hot context: current task, current state, ownership, latest detailed shifts, risks, and next step.
+- Add an explicit compaction threshold, such as a maximum line count or byte size, so older shift details are summarized before the file becomes token-expensive to read.
+- Store long-lived memory in portable Markdown first, for example under `.cli-collaboration/memory/`, so the skill remains usable on machines without extra tools.
+- If `ctxvault` is available, use it only as an optional project-local semantic index over that Markdown memory. Do not make `ctxvault` a required dependency or the sole source of truth.
+- Prefer one vault per project or workflow folder rather than one vault per agent, because the project is the durable unit of context and agents may rotate.
+
+This future track can be explored with the multi-LLM brainstorming workflow before changing `SKILL.md`, scripts, or release gates.
+
 ## Proposed File Changes
 
 ### `skills/cli-collaboration/SKILL.md`
