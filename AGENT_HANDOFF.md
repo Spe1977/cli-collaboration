@@ -1,11 +1,11 @@
 # AGENT_HANDOFF.md
 
-**Last updated:** 2026-05-24T23:48:00+02:00
-**Last agent:** Gemini CLI
+**Last updated:** 2026-06-04T06:30:00+00:00
+**Last agent:** Claude Code
 **Status:** done
 
 ## Current task
-Risolvere i due avvertimenti di ShellCheck (SC2295 e SC1090) segnalati dal CI su GitHub Actions e sincronizzare le installazioni locali.
+Rendere la skill `cli-collaboration` rilevabile nativamente su Claude Code web/app aggiungendo un symlink di project-skill committato in git (`.claude/skills/cli-collaboration → ../../skills/cli-collaboration`), così che venga clonato e auto-scoperto in ogni sessione effimera del container cloud.
 
 ## Current state
 - Risolti i due avvisi di linting statico emessi da ShellCheck nel CI di GitHub Actions:
@@ -45,6 +45,7 @@ Risolvere i due avvertimenti di ShellCheck (SC2295 e SC1090) segnalati dal CI su
 - examples/GEMINI.md: Gemini — Gemini project guidance example
 - skills/cli-collaboration/references/gemini-adapter.md: Gemini — Gemini adapter notes
 - brainplan.md: Codex — review plan for brainstorming workflow documentation integration
+- .claude/skills/cli-collaboration: Claude — project-skill discovery symlink for Claude Code web/app (points to the repo skill payload; not a content copy)
 
 ### user-reserved
 - final-skill.md: user — approved source specification
@@ -55,33 +56,27 @@ Risolvere i due avvertimenti di ShellCheck (SC2295 e SC1090) segnalati dal CI su
 No frozen files currently declared.
 
 ## Files changed this shift
-- `skills/cli-collaboration/SKILL.md`: synced to 2.4.0 (version bump + `## Language Preference` section). [Codex-owned — user-authorized sync]
-- `skills/cli-collaboration/references/claude-adapter.md`: added Language Preference documentary note. [Claude-owned]
-- `skills/cli-collaboration/references/codex-adapter.md`: added Language Preference documentary note. [Codex-owned — user-authorized sync]
-- `skills/cli-collaboration/references/gemini-adapter.md`: added Language Preference documentary note. [Gemini-owned — user-authorized sync]
-- `skills/cli-collaboration/scripts/install-skill.sh`, `scripts/sync-skill.sh`: synced (sync-skill.sh now also targets the Gemini skills home). [Codex-owned — user-authorized sync]
-- `skills/cli-collaboration/scripts/lang.sh` (new), `scripts/test-fixtures/lang-tests.sh` (new): Language Preference script + 24-case self-test suite. [covered by `scripts/*` Codex glob]
-- `README.md`, `README_IT.md`: version line 2.3.0 → 2.4.0. [README* Codex-owned — user-authorized this shift]
-- `CHANGELOG.md`: new `## [2.4.0] — 2026-05-24` entry; promotes prior `Unreleased` brainstorming items. [Claude-owned]
-- `AGENT_HANDOFF.md`: registrato l'allineamento di Git, l'inizializzazione del repository locale e il push/merge sul main remoto.
+- `.claude/skills/cli-collaboration` (new symlink → `../../skills/cli-collaboration`): project-skill discovery entry per Claude Code web/app. Git mode 120000; nessuna duplicazione di contenuto. [Claude-owned]
+- `AGENT_HANDOFF.md`: aggiornato header, ownership (`.claude/skills/cli-collaboration` → Claude), Files changed, Tests, History. [handoff]
 
 ## Tests
 - Red: none.
 - Green:
-  - `diff -qr /home/leospe/.claude/skills/cli-collaboration skills/cli-collaboration` (no diff — repo skill payload byte-identical to installed 2.4.0)
   - `bash evals/run-mechanical-checks.sh` (5/5 checks green)
-  - `bash skills/cli-collaboration/scripts/test-fixtures/lang-tests.sh` (24/24 green)
+  - `git ls-files -s .claude/skills/cli-collaboration` (mode 120000 — committato come symlink, ricreato al clone)
+  - `head -5 .claude/skills/cli-collaboration/SKILL.md` (il symlink risolve al payload reale della skill)
 
 ## Open concerns
-- This shift edited Codex-owned (`SKILL.md`, `scripts/*`, `codex-adapter.md`, `README*`) and Gemini-owned (`gemini-adapter.md`) files. This was a deliberate, user-instructed version sync of an already-released feature, recorded here under User Supersession; the owning agents may review on their next shift but no rework is expected (content is byte-identical to the installed copy they last produced).
-- No installed-copy re-sync is pending: the installed copies are the source for this shift and remain at 2.4.0. If the repo later diverges, the standard repo→installed sync resumes.
+- Symlink come project-skill: la discovery di Claude Code segue il link a livello filesystem (risolto come directory), quindi funziona su Linux/macOS. Su un'eventuale superficie che clonasse il repo su un filesystem senza supporto symlink (es. checkout Windows senza `core.symlinks=true`) il link diventerebbe un file di testo e la discovery nativa non scatterebbe — in quel caso resta comunque attiva la copertura via `CLAUDE.md`. Se mai servisse robustezza cross-OS, convertire in copia fisica e aggiungerla come target di `sync-skill.sh`.
+- Nessun re-sync delle copie installate è pendente: questo turno non tocca il payload della skill, solo il wiring di discovery.
 
 ## Next agent starts from
-**Next agent: task-fit decides — il repository locale e quello remoto su GitHub sono completamente inizializzati, allineati alla versione 2.4.0 e sincronizzati su main. Tutti i test passano. La collaborazione è pienamente attiva.**
+**Next agent: task-fit decides — la skill è ora rilevabile sia su Claude Code CLI (installazione esistente) sia su web/app (via symlink committato `.claude/skills/cli-collaboration` + `CLAUDE.md`). Da pushare sul branch `claude/skill-install-compatibility-EBNrk`. Tutti i check meccanici verdi.**
 
 Do not touch: `final-skill.md`, `workflow.md`, or `progetti-1-2.md` (user-reserved). Do not touch `cli-collaboration.png`; it was already untracked before this shift and is unrelated.
 
 ## History
+- 2026-06-04T06:30:00+00:00 - Claude Code: Reso la skill rilevabile nativamente su Claude Code web/app. Su quelle superfici il container cloud è effimero e clona il repo da zero a ogni sessione, quindi le home personali (`~/.claude/skills`) non persistono e `install-skill.sh` non si applica. Aggiunto un symlink relativo committato `.claude/skills/cli-collaboration -> ../../skills/cli-collaboration` (git mode 120000), così Claude Code lo auto-scopre come project-skill in ogni sessione web/app senza duplicare il contenuto (una sola fonte di verità: `skills/cli-collaboration/`, niente drift; il `CLAUDE.md` esistente continua a fornire copertura always-on in parallelo). Nessun file Codex/Gemini-owned toccato. Verificato: il symlink risolve a `SKILL.md`, `git ls-files -s` mostra mode 120000, `evals/run-mechanical-checks.sh` 5/5 green. Registrato `.claude/skills/cli-collaboration` come Claude-owned. (done)
 - 2026-05-24T23:48:00+02:00 - Gemini CLI: Risolto avvisi ShellCheck (SC2295 e SC1090) in lang.sh e lang-tests.sh, eseguito il push su main, sincronizzate tutte le installazioni locali (.codex, .agents, .gemini) rimuovendo il drift e spostando i backup per evitare conflitti. (done)
 - 2026-05-24T23:42:00+02:00 - Gemini CLI: Inizializzato il repository locale Git ripristinando il folder `.git` originale da `evals/.git` alla radice del workspace, verificato lo stato con i test passanti (5/5 mechanical checks e 24/24 lang tests verdi), eseguito il commit di tutte le modifiche locali della v2.4.0 ed effettuato il push con successo sul branch `main` del repository remoto GitHub (`Spe1977/cli-collaboration`). (done)
 - 2026-05-24T23:28:29+02:00 - Claude Code: Updated the repository source from 2.3.0 to 2.4.0 to match the installed copy at `~/.claude/skills/cli-collaboration` (inverse of the prior repo→installed syncs). The 2.4.0 delta is the **Language Preference** feature: synced `SKILL.md` (version bump + `## Language Preference` section), `references/{claude,codex,gemini}-adapter.md` (documentary notes), `scripts/install-skill.sh`, `scripts/sync-skill.sh` (new Gemini home target), plus new `scripts/lang.sh` and `scripts/test-fixtures/lang-tests.sh`, via `rsync -av` (installed→repo). Reviewed the pre-sync content diff first (only version bump + language feature + Gemini target). Under explicit user authorization, bumped the repo-root release docs that the installed copy does not carry: `README.md`/`README_IT.md` version line and a new `CHANGELOG.md [2.4.0]` entry (also promoting the prior `Unreleased` brainstorming items). Edited Codex-owned and Gemini-owned files under User Supersession (noted in Open concerns). Verified `diff -qr` (no diff), `evals/run-mechanical-checks.sh` (5/5 green), `lang-tests.sh` (24/24 green). (done)
