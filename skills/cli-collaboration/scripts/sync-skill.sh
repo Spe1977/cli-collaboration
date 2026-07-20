@@ -40,24 +40,27 @@ while [ "$#" -gt 0 ]; do
 done
 
 [ -d "$source_dir" ] || { echo "source not found: $source_dir" >&2; exit 2; }
+[ -f "$source_dir/SKILL.md" ] || {
+  echo "source missing SKILL.md: $source_dir" >&2
+  exit 2
+}
 
 if [ "${#targets[@]}" -eq 0 ]; then
   targets+=("${CODEX_HOME:-$HOME/.codex}/skills/cli-collaboration")
   targets+=("${AGENTS_HOME:-$HOME/.agents}/skills/cli-collaboration")
-  targets+=("${GEMINI_HOME:-$HOME/.gemini}/skills/cli-collaboration")
+  targets+=("${GROK_HOME:-$HOME/.grok}/skills/cli-collaboration")
 fi
 
 drift=0
-
 for target in "${targets[@]}"; do
-  if [ ! -e "$target" ]; then
+  if [ ! -d "$target" ]; then
     echo "missing: $target"
     drift=1
     continue
   fi
 
   if diff -qr "$source_dir" "$target" >/dev/null 2>&1; then
-    echo "ok: $target"
+    echo "in-sync: $target"
   else
     echo "drift: $target"
     drift=1

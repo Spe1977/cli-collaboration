@@ -12,7 +12,7 @@ For non-code workflows, keep the same handoff discipline. Test fields may be rep
 # AGENT_HANDOFF.md
 
 **Last updated:** <ISO 8601 timestamp with timezone>
-**Last agent:** <Codex | Claude Code | Gemini CLI | other>
+**Last agent:** <Codex | Claude Code | Gemini CLI | Grok | other>
 **Status:** <bootstrap | in-progress | done | blocked | paused>
 
 ## Current task

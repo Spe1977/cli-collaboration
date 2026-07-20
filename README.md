@@ -1,8 +1,8 @@
 # cli-collaboration
 
-**Version:** 2.4.0 (see [`CHANGELOG.md`](CHANGELOG.md)).
+**Version:** 2.5.0 (see [`CHANGELOG.md`](CHANGELOG.md)).
 
-`cli-collaboration` is a lightweight protocol for coordinating Codex, Claude Code, Gemini CLI, or one agent across multiple sessions in the same project.
+`cli-collaboration` is a lightweight protocol for coordinating Codex, Claude Code, Gemini CLI, Grok Build, or one agent across multiple sessions in the same project.
 
 The source of truth is `AGENT_HANDOFF.md`. Scripts are guardrails: they report drift, malformed ownership, and likely conflicts, but they do not replace agent judgment.
 
@@ -18,7 +18,7 @@ The source of truth is `AGENT_HANDOFF.md`. Scripts are guardrails: they report d
 
 The final workflow was shaped by the discussion in `workflow.md`.
 
-The shared conclusion is option C: the first agent should be chosen by task fit, not by a rigid rule about native skill loading. Codex is the natural first agent for scaffolding, scripts, tests, packaging, and release gates. Claude is the natural first agent for semantic protocol work, policy, templates, and reference writing. Gemini can bootstrap inert scaffolding or perform QA/red-team work as long as it creates or respects `AGENT_HANDOFF.md` immediately.
+The shared conclusion is option C: the first agent should be chosen by task fit, not by a rigid rule about native skill loading. Codex is the natural first agent for scaffolding, scripts, tests, packaging, and release gates. Claude is the natural first agent for semantic protocol work, policy, templates, and reference writing. Gemini can bootstrap inert scaffolding or perform QA/red-team work. Grok is a natural fit for Grok-native execution and immutable-host QA. Every agent must create or respect `AGENT_HANDOFF.md` immediately.
 
 The recommended multi-LLM flow is handoff-first:
 
@@ -37,11 +37,12 @@ The skill is designed to be effectively always available when collaboration stat
 - Codex loads the skill through its skill metadata and `AGENTS.md` project guidance.
 - Claude loads the skill through `SKILL.md` description matching, `CLAUDE.md`, and optional SessionStart hooks.
 - Gemini loads the skill through `activate_skill`, `GEMINI.md`, or the Gemini adapter flow.
+- Grok discovers `SKILL.md` from its skill directories and exposes the installed skill as `/cli-collaboration`.
 - All CLIs should treat the presence of `AGENT_HANDOFF.md`, `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, a dirty worktree, or a resume request as a trigger to apply the protocol.
 
-Gemini's automatic trigger is the weakest of the three. When activation does not fire, copy the forced-activation prompt from `skills/cli-collaboration/references/gemini-adapter.md` into the session opener.
+Gemini activation can require an explicit prompt. When activation does not fire, copy the forced-activation prompt from `skills/cli-collaboration/references/gemini-adapter.md` into the session opener.
 
-Slash commands such as `/cli-collaboration on` and `/cli-collaboration off` are useful UX, but they are not portable across CLIs. The cross-CLI pause mechanism is filesystem-based:
+Grok exposes the skill as `/cli-collaboration`; slash-command behavior differs across runtimes. The portable cross-CLI pause mechanism is filesystem-based:
 
 - `.cli-collaboration-off` in the project root.
 - `**Status:** paused` in `AGENT_HANDOFF.md`.
@@ -61,13 +62,15 @@ The package was intentionally built by dogfooding the protocol it provides.
 - Phase 1, Codex: implemented the core skill, scripts, fixtures, OpenAI metadata, Codex adapter, `README.md`, and technical eval wiring.
 - Phase 2, Claude: implemented semantic references, handoff template, anti-patterns, validation scenarios, Claude adapter, Claude metadata, and examples.
 - Phase 3, Gemini: implemented Gemini guidance and adapter content, then performed cross-CLI QA.
-- Final Codex verification: re-ran release gates after Phase 2 and Phase 3, then refreshed package metadata where needed.
+- Phase 4, Grok: contributed the initial Grok adapter, metadata, discovery research, and Bluefin-specific compatibility notes.
+- Final Codex verification: converted the initial Grok-specific port into one portable four-CLI package, added regression coverage, and re-ran the release gates.
 
 The division followed the final C-emendata decision:
 
 - Codex owns package/tooling and final release gates.
 - Claude owns semantic clarity and reference policy.
 - Gemini owns Gemini-specific guidance and QA/red-team review.
+- Grok owns Grok-specific adapter guidance, metadata, and runtime QA.
 
 ## Package Structure
 
@@ -91,12 +94,14 @@ cli-collaboration/
         ├── SKILL.md
         ├── agents/
         │   ├── openai.yaml
-        │   └── claude.yaml
+        │   ├── claude.yaml
+        │   └── grok.yaml
         ├── references/
         │   ├── alternate-workflows.md
         │   ├── codex-adapter.md
         │   ├── claude-adapter.md
         │   ├── gemini-adapter.md
+        │   ├── grok-adapter.md
         │   ├── handoff-template.md
         │   ├── handoff-anti-patterns.md
         │   └── validation-scenarios.md
@@ -106,6 +111,7 @@ cli-collaboration/
             ├── check-ownership.sh
             ├── parse-ownership.py
             └── test-fixtures/
+                └── grok-portability-tests.sh
 ```
 
 ## Core Protocol
@@ -150,7 +156,7 @@ Destructive operations are explicitly banned unless the user asks for them:
 
 ## Supported Platforms
 
-The guardrail scripts (`check-ownership.sh`, `install-skill.sh`, `sync-skill.sh`) and the test fixtures target Bash on Linux and macOS (the scripts rely on Bash features such as `mapfile` and `[[ ... ]]` and are not strictly POSIX `sh`). `check-ownership.sh` delegates the ownership parsing to a Python 3 helper (`parse-ownership.py`); Python 3 is therefore a runtime dependency of the ownership check (it was already a dependency of `evals/run-mechanical-checks.sh`). CI exercises both `ubuntu-latest` and `macos-latest` via GitHub Actions (`.github/workflows/ci.yml`). Native Windows is not supported; WSL is not part of the test matrix and is not guaranteed to work.
+The guardrail scripts (`check-ownership.sh`, `install-skill.sh`, `sync-skill.sh`) and the test fixtures target Bash on Linux and macOS (the scripts rely on Bash features such as `mapfile` and `[[ ... ]]` and are not strictly POSIX `sh`). `check-ownership.sh` delegates the ownership parsing to a Python 3 helper (`parse-ownership.py`); Python 3 is therefore a runtime dependency of the ownership check (it was already a dependency of `evals/run-mechanical-checks.sh`). CI exercises both `ubuntu-latest` and `macos-latest` via GitHub Actions (`.github/workflows/ci.yml`). The Grok default target stays under the mutable user home, so it is compatible with immutable Bluefin/Silverblue hosts. Native Windows is not supported; WSL is not part of the test matrix and is not guaranteed to work.
 
 ## Install
 
@@ -160,11 +166,16 @@ Preview the default install targets:
 skills/cli-collaboration/scripts/install-skill.sh --dry-run
 ```
 
-Install to the default Codex and agents skill directories:
+Install to the default Codex, interoperable Agents, and Grok skill directories:
 
 ```bash
 skills/cli-collaboration/scripts/install-skill.sh
 ```
+
+Gemini CLI discovers `~/.agents/skills/` as an alias of
+`~/.gemini/skills/`, with the Agents alias taking precedence. The default
+install therefore covers Gemini through the Agents target and deliberately
+does not duplicate the skill in both directories.
 
 Install to an explicit target:
 
@@ -178,10 +189,23 @@ For Claude Code:
 skills/cli-collaboration/scripts/install-skill.sh --target "$HOME/.claude/skills/cli-collaboration"
 ```
 
-For Gemini CLI:
+For a Gemini-only installation that should not use the interoperable Agents
+target:
 
 ```bash
 skills/cli-collaboration/scripts/install-skill.sh --target "$HOME/.gemini/skills/cli-collaboration"
+```
+
+For Antigravity CLI installations using the Gemini configuration-tree layout:
+
+```bash
+skills/cli-collaboration/scripts/install-skill.sh --target "$HOME/.gemini/config/skills/cli-collaboration"
+```
+
+For Grok Build:
+
+```bash
+skills/cli-collaboration/scripts/install-skill.sh --target "${GROK_HOME:-$HOME/.grok}/skills/cli-collaboration"
 ```
 
 ## Check Ownership
@@ -249,6 +273,7 @@ Future changes should preserve the same ownership model used to build the skill:
 - Codex owns package/tooling files, install/sync/check scripts, metadata, release gates, `.gitignore`, `README.md`, and `evals/evals.json`.
 - Claude owns semantic references, handoff template, anti-patterns, validation scenario prose, Claude adapter, and future-architecture policy.
 - Gemini owns Gemini adapter/example content and QA/red-team review.
+- Grok owns Grok adapter/metadata content and Grok runtime QA.
 
 When changing eval behavior, update `skills/cli-collaboration/references/validation-scenarios.md` first, then mirror the technical wiring in `evals/evals.json`.
 
@@ -266,9 +291,12 @@ The package has passed these local verification gates. Most commands are directl
 |---|---|---|
 | Skill package validation | `python3 <skill-creator>/scripts/quick_validate.py skills/cli-collaboration` | pass |
 | Bash syntax | `bash -n` on all scripts | pass |
-| Ownership fixtures | `skills/cli-collaboration/scripts/test-fixtures/run-tests.sh` | pass, 7/7 |
+| Ownership fixtures | `skills/cli-collaboration/scripts/test-fixtures/run-tests.sh` | pass, 8/8 |
 | JSON validity | `python3 -m json.tool evals/evals.json` | pass |
-| YAML validity | PyYAML parse of `SKILL.md`, `openai.yaml`, `claude.yaml` | pass |
+| YAML validity | PyYAML parse of `SKILL.md`, `openai.yaml`, `claude.yaml`, `grok.yaml` | pass |
+| Grok portability | `skills/cli-collaboration/scripts/test-fixtures/grok-portability-tests.sh` | pass |
+| Grok discovery | temporary `GROK_HOME` install plus `grok inspect --json` | pass |
+| Gemini discovery | `gemini skills list --all` with the Agents alias installed | pass, enabled without duplicate skill paths |
 | Install dry-run | `install-skill.sh --dry-run` | pass |
 | Explicit install target | `tmp="$(mktemp -d)" && install-skill.sh --target "$tmp/cli-collaboration"` | pass |
 | Explicit sync target | `sync-skill.sh --target "$tmp/cli-collaboration"` | pass after explicit install |
@@ -280,12 +308,12 @@ The default installed skill directories may drift from this local package until 
 
 ## Release Readiness
 
-The package is locally verified and ready to install. The recommended next operational steps are:
+Release `2.5.0` is locally verified. For future release updates:
 
-1. Add a Git remote if this repository should be published.
-2. Push `main` to the remote.
-3. Run `install-skill.sh --dry-run` before future local installs.
-4. Add the relevant project guidance file (`AGENTS.md`, `CLAUDE.md`, or `GEMINI.md`) to projects that should enforce handoff-first collaboration.
+1. Review the release diff and run all verification gates.
+2. Push the intentional release commit to the configured GitHub remote.
+3. Run `install-skill.sh --dry-run` before updating local installations.
+4. Add the relevant project guidance file (`AGENTS.md`, `CLAUDE.md`, or `GEMINI.md`) to projects that should enforce handoff-first collaboration across Codex, Claude Code, Gemini CLI, Grok Build, or Antigravity.
 
 ## License
 

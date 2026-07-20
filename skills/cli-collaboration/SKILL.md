@@ -1,7 +1,9 @@
 ---
 name: cli-collaboration
-description: "Use when multiple CLI agents or assistants alternate on the same repository or explicit shared handoff workflow — especially with a dirty worktree, an AGENT_HANDOFF.md, side-by-side CLAUDE.md/AGENTS.md/GEMINI.md, ownership notes, red tests, resume/continue requests, or any signal that another agent or the user left state you must preserve."
-version: "2.4.0"
+description: "Use when multiple CLI agents or assistants alternate on the same repository or explicit shared handoff workflow — especially with AGENT_HANDOFF.md, side-by-side AGENTS.md/CLAUDE.md/GEMINI.md, dirty worktrees, ownership notes, red tests, resume/continue requests, or /cli-collaboration in Grok Build."
+metadata:
+  version: "2.5.0"
+  short-description: "Safe multi-agent handoffs via AGENT_HANDOFF.md"
 ---
 
 # CLI Collaboration
@@ -21,7 +23,7 @@ Run this once, as the final step of the activation cycle, so the whole session
 The preference lives in one global file:
 `${XDG_CONFIG_HOME:-$HOME/.config}/cli-collaboration/config.json`.
 
-1. Run `scripts/lang.sh get`.
+1. Run `scripts/lang.sh get` from the installed skill directory.
 2. **If it prints a value (exit 0):** continue the session in that language. Do
    not ask again.
 3. **If it exits non-zero (not configured):** ask the user, in English:
@@ -74,7 +76,7 @@ Patterns are bash `case` patterns: `*` matches any sequence of characters **incl
 
 Sections:
 
-- `### agent-owned`: files assigned to Codex, Claude, Gemini, or another named agent. Globs are allowed. Parenthetical notes like `(pending Phase 2)` are advisory.
+- `### agent-owned`: files assigned to Codex, Claude, Gemini, Grok, or another named agent. Globs are allowed. Parenthetical notes like `(pending Phase 2)` are advisory.
 - `### user-reserved`: user-owned files. Stop before editing.
 - `### frozen`: published or protected files. Stop before editing.
 
@@ -98,6 +100,7 @@ Do not resolve ownership conflicts by overwriting, reverting, stashing, or clean
 - Use tests for implementation work when possible. A failing test is a good handoff artifact.
 - Prefer a small complete task plus precise handoff over a broad half-finished refactor.
 - The single-agent case still uses the handoff: it is project memory between sessions.
+- Only one parent session updates `AGENT_HANDOFF.md`; parallel subagents report back instead of editing it concurrently.
 
 ## User Supersession
 
@@ -121,13 +124,14 @@ Load adapter notes only when relevant:
 - `references/codex-adapter.md`: Codex install paths, AGENTS.md, and script usage.
 - `references/claude-adapter.md`: Claude Code hooks and command guidance.
 - `references/gemini-adapter.md`: Gemini activation and GEMINI.md guidance.
+- `references/grok-adapter.md`: Grok Build discovery, tools, Bluefin paths, and agent identity.
 
 ## End Of Shift
 
 Update `AGENT_HANDOFF.md` last with:
 
 ```text
-Agent: <Codex | Claude Code | Gemini CLI | other>
+Agent: <Codex | Claude Code | Gemini CLI | Grok | other>
 Date/time: <ISO 8601 with timezone>
 Task: <what you took on>
 Status: <done | in-progress | blocked>

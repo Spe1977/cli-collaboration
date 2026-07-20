@@ -1,6 +1,6 @@
 # GEMINI.md
 
-This project uses the `cli-collaboration` skill to coordinate Codex, Claude Code, Gemini CLI, and single-agent multi-session work on a shared repository.
+This project uses the `cli-collaboration` skill to coordinate Codex, Claude Code, Gemini CLI, Grok Build, and single-agent multi-session work on a shared repository.
 
 ## Activation
 

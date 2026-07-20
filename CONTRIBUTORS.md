@@ -8,9 +8,10 @@ This project was designed and refined through a multi-agent collaboration. GitHu
 
 ## AI agents
 
-- **Codex** (OpenAI) — Phase 1 implementation: core `SKILL.md`, guardrail scripts (`install-skill.sh`, `sync-skill.sh`, `check-ownership.sh`), fixture suite, OpenAI metadata, Codex adapter, `README.md`, `README_IT.md`, `.gitignore`, parser hardening (mandatory subsections, dash normalization), Git workflow, release gates.
+- **Codex** (OpenAI) — Phase 1 implementation: core `SKILL.md`, guardrail scripts (`install-skill.sh`, `sync-skill.sh`, `check-ownership.sh`), fixture suite, OpenAI metadata, Codex adapter, `README.md`, `README_IT.md`, `.gitignore`, parser hardening (mandatory subsections, dash normalization), Git workflow, release gates. Final v2.5 portability hardening and regression coverage for the Grok contribution.
 - **Claude Code** (Anthropic) — Phase 2 implementation: semantic references (`handoff-template.md`, `handoff-anti-patterns.md`, `validation-scenarios.md`), Claude adapter, Claude metadata, examples (`AGENT_HANDOFF.md`, `CLAUDE.md`), `docs/future-architecture.md`, README review items R1-R12, install-target drift detection, closing audit.
 - **Gemini CLI** (Google) — Phase 3 implementation: Gemini adapter, `examples/GEMINI.md`, cross-agent verification, final tri-CLI consistency checks.
+- **Grok Build** (xAI) — Phase 4 initial compatibility contribution: Grok adapter and documentation-only metadata, discovery/install research, and Bluefin/Silverblue runtime notes.
 
 ## Git authorship
 

@@ -4,6 +4,8 @@ set -u
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CHECK="$ROOT/check-ownership.sh"
 FIXTURES="$ROOT/test-fixtures"
+WORK="$(mktemp -d)"
+trap 'rm -rf "$WORK"' EXIT
 
 failures=0
 
@@ -12,7 +14,7 @@ run_case() {
   local expected="$2"
   shift 2
 
-  "$CHECK" "$@" >"$FIXTURES/$name.out" 2>"$FIXTURES/$name.err"
+  "$CHECK" "$@" >"$WORK/$name.out" 2>"$WORK/$name.err"
   local actual=$?
 
   if [ "$actual" -ne "$expected" ]; then
@@ -39,8 +41,6 @@ run_case glob-crosses-slash 0 --handoff "$FIXTURES/handoff-glob-crosses-slash.md
 # `grep -nP` here, which is not portable to macOS/BSD grep — moving the
 # guard out keeps this file free of GNU-grep-only flags so the fixture
 # suite runs identically on Linux and macOS without an extra dependency.
-
-rm -f "$FIXTURES"/*.out "$FIXTURES"/*.err
 
 if [ "$failures" -ne 0 ]; then
   exit 1

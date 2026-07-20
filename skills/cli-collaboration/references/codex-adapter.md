@@ -42,7 +42,14 @@ All scripts expect to run from any cwd and resolve paths from their own location
   - Reports all missing or drifted targets before exiting.
   - `--install` delegates updates to `install-skill.sh`.
 
-Default install targets are `${CODEX_HOME:-$HOME/.codex}/skills/cli-collaboration` and `${AGENTS_HOME:-$HOME/.agents}/skills/cli-collaboration`.
+Default install targets are
+`${CODEX_HOME:-$HOME/.codex}/skills/cli-collaboration`,
+`${AGENTS_HOME:-$HOME/.agents}/skills/cli-collaboration`,
+`${GROK_HOME:-$HOME/.grok}/skills/cli-collaboration`. Use `--target` when only
+one runtime should be updated. Gemini CLI discovers the interoperable Agents
+target as an alias of `~/.gemini/skills`; do not install both aliases unless a
+specific environment requires separate copies. Claude and Antigravity remain
+explicit targets.
 
 ## Ownership Format
 

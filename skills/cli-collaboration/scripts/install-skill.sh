@@ -9,13 +9,16 @@ Installs the cli-collaboration skill directory into explicit targets. If no
 target is supplied, defaults to:
   ${CODEX_HOME:-$HOME/.codex}/skills/cli-collaboration
   ${AGENTS_HOME:-$HOME/.agents}/skills/cli-collaboration
-  ${GEMINI_HOME:-$HOME/.gemini}/skills/cli-collaboration
+  ${GROK_HOME:-$HOME/.grok}/skills/cli-collaboration
+
+Gemini CLI discovers the interoperable AGENTS_HOME target. Use --target for
+Gemini-only, Antigravity, or Claude installations.
 
 Exit codes:
   0  install completed (or unchanged) for every target
-  2  usage error or missing source directory
+  2  usage error or invalid source
   3  install failed for a target; if a pre-existing target was backed up,
-     it is restored automatically before exit
+     it is restored automatically after a copy failure
 USAGE
 }
 
@@ -48,11 +51,15 @@ while [ "$#" -gt 0 ]; do
 done
 
 [ -d "$source_dir" ] || { echo "source not found: $source_dir" >&2; exit 2; }
+[ -f "$source_dir/SKILL.md" ] || {
+  echo "source missing SKILL.md: $source_dir" >&2
+  exit 2
+}
 
 if [ "${#targets[@]}" -eq 0 ]; then
   targets+=("${CODEX_HOME:-$HOME/.codex}/skills/cli-collaboration")
   targets+=("${AGENTS_HOME:-$HOME/.agents}/skills/cli-collaboration")
-  targets+=("${GEMINI_HOME:-$HOME/.gemini}/skills/cli-collaboration")
+  targets+=("${GROK_HOME:-$HOME/.grok}/skills/cli-collaboration")
 fi
 
 for target in "${targets[@]}"; do
@@ -67,12 +74,13 @@ for target in "${targets[@]}"; do
     exit 3
   fi
 
+  if [ -d "$target" ] && diff -qr "$source_dir" "$target" >/dev/null 2>&1; then
+    echo "unchanged: $target"
+    continue
+  fi
+
   backup=""
   if [ -e "$target" ]; then
-    if diff -qr "$source_dir" "$target" >/dev/null 2>&1; then
-      echo "unchanged: $target"
-      continue
-    fi
     backup="$target.backup.$(date +%Y%m%d%H%M%S)"
     if ! mv "$target" "$backup"; then
       echo "install failed: could not move $target to $backup" >&2

@@ -6,6 +6,51 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [2.5.0] — 2026-07-20
+
+This release adds Grok Build compatibility without forking or replacing the
+existing Codex, Claude Code, and Gemini CLI behavior. One portable package is
+now installable across all four runtimes.
+
+### Added
+
+- **`references/grok-adapter.md`**: Grok discovery paths, explicit `Grok`
+  ownership identity, tool mapping, parent-only handoff updates for subagents,
+  and immutable-host guidance.
+- **`agents/grok.yaml`**: documentation-only metadata for humans and external
+  loaders; Grok itself discovers the shared `SKILL.md`.
+- **Grok default install target**:
+  `${GROK_HOME:-$HOME/.grok}/skills/cli-collaboration`, alongside the existing
+  Codex and interoperable Agents targets. Gemini CLI discovers the Agents
+  alias; Antigravity and Claude remain explicit targets.
+- **Grok portability regression fixture**: checks the shared frontmatter,
+  neutral core instructions, parser identity behavior, default install/sync
+  targets, and Grok adapter presence.
+- **Grok discovery validation**: temporary-home install plus
+  `grok inspect --json` release check.
+
+### Changed
+
+- `SKILL.md` now uses a validator-compatible shared frontmatter containing
+  `name`, trigger `description`, and string metadata at version `2.5.0`.
+- `install-skill.sh` and `sync-skill.sh` use the same three non-duplicating
+  default targets: Codex, Agents, and Grok. Gemini CLI discovers the Agents
+  alias; Gemini-only, Antigravity, and Claude installs use `--target`.
+- README and adapter documentation now cover Grok Build throughout, native
+  Gemini Agent Skills discovery, the `.agents/skills` precedence rule, and the
+  Antigravity configuration-tree target.
+- The ownership parser keeps `Codex` as its backward-compatible default;
+  non-Codex runtimes pass their identity explicitly with `--agent`.
+- The rollback fixture now creates a valid source package before simulating a
+  copy failure, so it still exercises the documented exit-3 rollback path.
+- The ownership fixture runner now writes transient output under a temporary
+  directory, preventing false install/sync drift during concurrent checks.
+
+### Platform
+
+- Grok installs under the mutable user home, including on **Bluefin 44 / Fedora
+  Silverblue** immutable hosts; no system-layer package installation is needed.
+
 ## [2.4.0] — 2026-05-24
 
 This release adds a per-user **Language Preference** so every skill activation — by any CLI agent — speaks the user's chosen language, and promotes the previously unreleased multi-LLM brainstorming workflow to a tagged release.

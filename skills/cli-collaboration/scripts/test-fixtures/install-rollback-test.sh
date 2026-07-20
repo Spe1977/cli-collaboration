@@ -20,6 +20,8 @@ trap 'rm -rf "$WORK"' EXIT
 SRC="$WORK/source"
 mkdir -p "$SRC"
 echo "version=2" > "$SRC/marker.txt"
+printf '%s\n' '---' 'name: cli-collaboration' \
+  'description: rollback fixture' '---' > "$SRC/SKILL.md"
 
 # Target: pre-existing install with different content (forces backup+cp path).
 TARGET_PARENT="$WORK/install"

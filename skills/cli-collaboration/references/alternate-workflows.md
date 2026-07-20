@@ -113,7 +113,7 @@ If `AGENT_HANDOFF.md` is missing:
 # AGENT_HANDOFF.md
 
 **Last updated:** <ISO 8601 timestamp with timezone>
-**Last agent:** <Codex | Claude Code | Gemini CLI | other>
+**Last agent:** <Codex | Claude Code | Gemini CLI | Grok | other>
 **Status:** bootstrap
 
 ## Current task

@@ -189,7 +189,7 @@ Suggested entry:
 1. Is the `SKILL.md` trigger expansion narrow enough, or could it cause unwanted activation outside repository collaboration?
 2. Should the seed filename be limited to `brainstorming.md`, or should the documentation leave room for future seed files?
 3. Should `alternate-workflows.md` include only brainstorming for now, or briefly list other patterns without templates?
-4. Is the embedded `AGENT_HANDOFF.md` bootstrap template enough to make a one-file seed folder reliable across Codex, Claude, Gemini, and Antigravity?
+4. Is the embedded `AGENT_HANDOFF.md` bootstrap template enough to make a one-file seed folder reliable across Codex, Claude, Gemini, Grok, and Antigravity?
 5. Should `handoff-template.md` mention non-code workflows, or should that remain isolated in `alternate-workflows.md`?
 
 ## Acceptance Criteria

@@ -1,7 +1,9 @@
 .handoff-backups/
 
+# Local Claude Code permission state
+.claude/settings.local.json
+
 # Internal design notes — kept locally, not part of the distributed skill
 analisi.md
 final-skill.md
 workflow.md
-

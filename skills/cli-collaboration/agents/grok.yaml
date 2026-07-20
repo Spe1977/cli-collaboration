@@ -1,0 +1,29 @@
+# Grok metadata for cli-collaboration.
+#
+# DOCUMENTATION-ONLY for external loaders. Grok Build discovers skills via
+# SKILL.md frontmatter under ~/.grok/skills/ (or project .grok/skills/), not
+# via this YAML. Kept for symmetry with agents/openai.yaml and agents/claude.yaml
+# and for humans inspecting the package.
+#
+# Active integration surface:
+#   1. SKILL.md frontmatter (name, description, string metadata)
+#   2. Optional AGENTS.md directive pointing at AGENT_HANDOFF.md
+#   3. Slash command /cli-collaboration
+# See references/grok-adapter.md for install and Bluefin notes.
+
+interface:
+  display_name: "CLI Collaboration"
+  short_description: "Coordinate CLI agents safely on a shared repository"
+  default_prompt: >
+    Use cli-collaboration. Read AGENT_HANDOFF.md before editing, declare the
+    start gate (files, ownership, reserved zones, stop condition), run
+    check-ownership.sh --agent Grok when needed, then resume from the next
+    concrete action. Never clean work you did not author.
+  agent_name: "Grok"
+  install_path: "${GROK_HOME:-$HOME/.grok}/skills/cli-collaboration"
+
+metadata:
+  documentation_only: true
+  consumed_by: "none — Grok uses SKILL.md under ~/.grok/skills/"
+  authoritative_adapter: "references/grok-adapter.md"
+  platform: "linux-user-home (Bluefin/Silverblue safe)"

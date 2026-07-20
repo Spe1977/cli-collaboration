@@ -2,29 +2,48 @@
 
 Use this reference when installing, activating, or operating `cli-collaboration` from Gemini CLI.
 
-## Triggering
+## Discovery And Activation
 
-Gemini CLI does not have an automatic description-matching skill loader. Instead, it relies on project-level contextual instructions. The skill activates when:
+Current Gemini CLI releases implement the Agent Skills lifecycle directly:
+they discover skill metadata at session start and call `activate_skill` when a
+task matches the description. The skill activates when:
 
+- Gemini matches the shared `SKILL.md` description and requests activation.
 - `GEMINI.md` instructs the agent to read `AGENT_HANDOFF.md` at the start of a session.
-- The `activate_skill` tool is invoked by the user or through an agent plan targeting the `cli-collaboration` skill (when installed as a native extension).
+- The `activate_skill` tool is invoked explicitly by the user or an agent plan.
 - A dirty worktree or an explicit user request indicates the need to resume work or collaborate with another agent.
 
 ## Install Path
 
-Default install target for Gemini CLI (as a contextual extension):
+Gemini CLI discovers user skills from either of these aliases:
 
 ```
 ~/.gemini/skills/cli-collaboration/
+~/.agents/skills/cli-collaboration/
 ```
 
-Use the package installer:
+Within the user tier, `.agents/skills/` takes precedence. Do not install the
+same skill in both paths: Gemini reports a duplicate-name conflict even when
+the payloads are identical. The package default uses the interoperable Agents
+path, which also works with other skill-aware runtimes.
+
+For a Gemini-only installation, use one explicit target:
 
 ```bash
 skills/cli-collaboration/scripts/install-skill.sh --target "$HOME/.gemini/skills/cli-collaboration"
 ```
 
 The installer is idempotent and backs up divergent targets before copying. To preview without writing, pass `--dry-run`.
+
+Antigravity CLI installations using the Gemini configuration-tree layout can
+be updated explicitly with:
+
+```bash
+skills/cli-collaboration/scripts/install-skill.sh \
+  --target "$HOME/.gemini/config/skills/cli-collaboration"
+```
+
+Verify native Gemini discovery with `gemini skills list --all`.
 
 ## Project Guidance (`GEMINI.md`)
 
@@ -43,7 +62,7 @@ concrete step.
 ## Known Limitations
 
 - **No Custom Slash Commands:** Gemini CLI does not natively support custom slash commands like `/cli-collaboration on|off`. Toggling must be done via the filesystem (e.g., `.cli-collaboration-off` sentinel file or `Status: paused` in the handoff).
-- **Manual Triggering:** If the skill is not injected via `GEMINI.md`, the user must explicitly ask the agent to `activate_skill cli-collaboration` or instruct it to read the handoff.
+- **Activation Consent:** Native discovery loads only metadata. Gemini may ask for confirmation before injecting the full skill and bundled resources.
 - **Parallel Subagents:** Gemini CLI can dispatch parallel subagents. The handoff must be respected and updated sequentially; parallel subagents must not mutate `AGENT_HANDOFF.md` concurrently.
 
 ## Forced Activation

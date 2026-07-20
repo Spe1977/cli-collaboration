@@ -1,19 +1,18 @@
 # AGENT_HANDOFF.md
 
-**Last updated:** 2026-05-24T23:48:00+02:00
-**Last agent:** Gemini CLI
-**Status:** done
+**Last updated:** 2026-07-20T17:59:20+02:00
+**Last agent:** Codex
+**Status:** in-progress
 
 ## Current task
-Risolvere i due avvertimenti di ShellCheck (SC2295 e SC1090) segnalati dal CI su GitHub Actions e sincronizzare le installazioni locali.
+Completare la documentazione Grok/Gemini/Antigravity della release `2.5.0`, pubblicare il commit su `origin/main` e verificare GitHub Actions.
 
 ## Current state
-- Risolti i due avvisi di linting statico emessi da ShellCheck nel CI di GitHub Actions:
-  1. SC2295 in `lang.sh` (riferimento a pattern/glob) risolto quotando separatamente l'espansione `$field`.
-  2. SC1090 in `lang-tests.sh` (sourcing non costante) risolto inserendo la direttiva `# shellcheck source=/dev/null` appropriata.
-- Verificato con successo il superamento locale di tutti i test meccanici (`evals/run-mechanical-checks.sh` -> 5/5 green) e funzionali delle lingue (`lang-tests.sh` -> 24/24 green).
-- Eseguito il commit e il push delle correzioni sul branch `main` di GitHub.
-- Sincronizzate tutte le copie installate della skill `cli-collaboration` (`.codex`, `.agents` e `.gemini`) per rimuovere il drift con il repository e spostate le directory di backup create per evitare conflitti di discovery delle skill.
+- Il port Grok-specifico e stato corretto in una release portabile unica `2.5.0`: `SKILL.md` resta neutrale e compatibile con i validator condivisi; le istruzioni specifiche sono isolate nell'adapter Grok.
+- Install e sync hanno tre target predefiniti non duplicati (Codex, Agents e Grok). Gemini CLI scopre l'alias interoperabile Agents; Gemini-only, Antigravity e Claude restano target espliciti. Il parser mantiene `Codex` come default storico e gli altri runtime passano `--agent` esplicitamente.
+- Aggiunti adapter Grok, metadata documentali e fixture di portabilita. Grok 0.2.106 scopre correttamente la copia installata in una home temporanea come skill utente invocabile.
+- Ripristinati i permessi corretti dei file e ignorato solo lo stato locale `.claude/settings.local.json`; `cli-collaboration.png` e i file user-reserved non sono stati toccati.
+- Le copie realmente installate per Codex, `.agents`/Gemini, Gemini/Antigravity, Grok e Claude sono byte-identiche alla sorgente `2.5.0`; la copia Gemini duplicata e tutti i backup sono stati spostati fuori dalle directory di discovery.
 
 ## File ownership
 ### agent-owned
@@ -33,7 +32,7 @@ Risolvere i due avvertimenti di ShellCheck (SC2295 e SC1090) segnalati dal CI su
 - GEMINI.md: Gemini — Gemini project guidance in the root
 - CONTRIBUTORS.md: Claude — multi-agent contribution record
 - CONTRIBUTORS_IT.md: Claude — Italian mirror of the multi-agent contribution record
-- CHANGELOG.md: Claude — v2.3 changelog created in P5 (the next maintainer may reassign to Codex if release-tracking docs are considered part of the Codex release-gate ownership; left with Claude for now since Claude created it)
+- CHANGELOG.md: Codex — release tracking and version-gate documentation (reassigned under User Supersession for v2.5)
 - skills/cli-collaboration/references/handoff-template.md: Claude — canonical human handoff template
 - skills/cli-collaboration/references/handoff-anti-patterns.md: Claude — semantic failure modes
 - skills/cli-collaboration/references/validation-scenarios.md: Claude — textual scenarios A-F and negative asserts
@@ -44,6 +43,10 @@ Risolvere i due avvertimenti di ShellCheck (SC2295 e SC1090) segnalati dal CI su
 - docs/future-architecture.md: Claude — v3 thresholds and sidecar policy
 - examples/GEMINI.md: Gemini — Gemini project guidance example
 - skills/cli-collaboration/references/gemini-adapter.md: Gemini — Gemini adapter notes
+- skills/cli-collaboration/agents/grok.yaml: Grok — documentation-only Grok metadata
+- skills/cli-collaboration/references/grok-adapter.md: Grok — Grok discovery, identity, tools, and Bluefin guidance
+- docs/superpowers/specs/*: Codex — approved implementation design records
+- docs/superpowers/plans/*: Codex — executable implementation plans
 - brainplan.md: Codex — review plan for brainstorming workflow documentation integration
 
 ### user-reserved
@@ -55,33 +58,53 @@ Risolvere i due avvertimenti di ShellCheck (SC2295 e SC1090) segnalati dal CI su
 No frozen files currently declared.
 
 ## Files changed this shift
-- `skills/cli-collaboration/SKILL.md`: synced to 2.4.0 (version bump + `## Language Preference` section). [Codex-owned — user-authorized sync]
-- `skills/cli-collaboration/references/claude-adapter.md`: added Language Preference documentary note. [Claude-owned]
-- `skills/cli-collaboration/references/codex-adapter.md`: added Language Preference documentary note. [Codex-owned — user-authorized sync]
-- `skills/cli-collaboration/references/gemini-adapter.md`: added Language Preference documentary note. [Gemini-owned — user-authorized sync]
-- `skills/cli-collaboration/scripts/install-skill.sh`, `scripts/sync-skill.sh`: synced (sync-skill.sh now also targets the Gemini skills home). [Codex-owned — user-authorized sync]
-- `skills/cli-collaboration/scripts/lang.sh` (new), `scripts/test-fixtures/lang-tests.sh` (new): Language Preference script + 24-case self-test suite. [covered by `scripts/*` Codex glob]
-- `README.md`, `README_IT.md`: version line 2.3.0 → 2.4.0. [README* Codex-owned — user-authorized this shift]
-- `CHANGELOG.md`: new `## [2.4.0] — 2026-05-24` entry; promotes prior `Unreleased` brainstorming items. [Claude-owned]
-- `AGENT_HANDOFF.md`: registrato l'allineamento di Git, l'inizializzazione del repository locale e il push/merge sul main remoto.
+- `skills/cli-collaboration/SKILL.md`: frontmatter portabile, metadata `2.5.0`, core neutrale e routing verso l'adapter Grok.
+- `skills/cli-collaboration/scripts/{install-skill.sh,sync-skill.sh}`: target Grok aggiuntivo, default non duplicati Codex/Agents/Grok, validazione sorgente e ABI/rollback preservati.
+- `skills/cli-collaboration/scripts/test-fixtures/{grok-portability-tests.sh,install-rollback-test.sh,run-tests.sh}`: regressioni Grok/multi-CLI, divieto del doppio alias Gemini, precondizione rollback valida e output concorrente isolato in `/tmp`.
+- `evals/run-mechanical-checks.sh`: fixture Grok aggiunta come sesto gate.
+- `skills/cli-collaboration/{agents/grok.yaml,references/grok-adapter.md}`: integrazione Grok documentata senza contaminare il core condiviso.
+- `skills/cli-collaboration/references/{codex-adapter.md,gemini-adapter.md,handoff-template.md,alternate-workflows.md}` e `examples/AGENTS.md`: discovery, target, identita e template allineati a Codex, Claude, Gemini, Grok e Antigravity.
+- `CLAUDE.md`, `GEMINI.md`, `examples/CLAUDE.md`, `examples/GEMINI.md` e `brainplan.md`: riferimenti Grok aggiunti dove mancavano.
+- `README.md`, `README_IT.md`, `CHANGELOG.md`, `CONTRIBUTORS.md`, `CONTRIBUTORS_IT.md`: release `2.5.0`, Grok Build, discovery Gemini, target Antigravity, verifica e crediti aggiornati.
+- `.gitignore`: escluso solo `.claude/settings.local.json`; gli artefatti locali dell'utente restano preservati.
+- `docs/superpowers/specs/2026-07-20-grok-multicli-compatibility-design.md` e `docs/superpowers/plans/2026-07-20-grok-multicli-compatibility.md`: design approvato e piano eseguito.
+- Installazioni esterne sincronizzate: `~/.codex/skills`, `~/.agents/skills` (anche Gemini), `~/.gemini/config/skills` (Antigravity), `~/.grok/skills` e `~/.claude/skills`; copia ridondante `~/.gemini/skills` e backup spostati nei rispettivi `skills-backups`.
+- `AGENT_HANDOFF.md`: chiusura del turno e User Supersession registrate per ultime.
 
 ## Tests
-- Red: none.
+- Red:
+  - `grok-portability-tests.sh`: frontmatter condiviso inizialmente incompatibile e core Grok-specifico.
+  - Esecuzione parallela dei fixture: falso drift install/sync causato da `.out/.err` scritti dentro il payload sorgente.
+  - `gemini skills list --all`: warning riproducibile per skill duplicata in `~/.agents/skills` e `~/.gemini/skills`; fixture aggiornata inizialmente rossa sul doppio target.
+  - Audit documentazione Grok: fixture rossa per riferimenti mancanti in `CLAUDE.md` e guidance di esempio.
 - Green:
-  - `diff -qr /home/leospe/.claude/skills/cli-collaboration skills/cli-collaboration` (no diff — repo skill payload byte-identical to installed 2.4.0)
-  - `bash evals/run-mechanical-checks.sh` (5/5 checks green)
-  - `bash skills/cli-collaboration/scripts/test-fixtures/lang-tests.sh` (24/24 green)
+  - `bash evals/run-mechanical-checks.sh` (6/6 gate verdi)
+  - `bash skills/cli-collaboration/scripts/test-fixtures/lang-tests.sh` (24/24 verdi)
+  - ownership, rollback e Grok portability fixture, anche in parallelo (tutti verdi)
+  - `quick_validate.py skills/cli-collaboration` (`Skill is valid!`)
+  - `bash -n` su tutti gli script, JSON e YAML parse (verdi)
+  - install e sync predefiniti in home temporanee: Codex, Agents/Gemini e Grok tutti `in-sync`, senza copia Gemini duplicata
+  - `GROK_HOME=<temp> grok inspect --json` con Grok 0.2.106: `cli-collaboration` scoperta dalla user path e `userInvocable: true`
+  - `sync-skill.sh` con cinque target reali non duplicati: tutte le copie `in-sync` e tutte riportano metadata version `2.5.0`
+  - `grok inspect --json` sulla home reale: una sola skill `cli-collaboration`, sorgente `~/.grok/skills`, `userInvocable: true`
+  - `gemini skills list --all`: skill `cli-collaboration` abilitata e caricata da `~/.agents/skills`, senza warning di conflitto
+  - ownership guard e `git diff --check` (verdi)
 
 ## Open concerns
-- This shift edited Codex-owned (`SKILL.md`, `scripts/*`, `codex-adapter.md`, `README*`) and Gemini-owned (`gemini-adapter.md`) files. This was a deliberate, user-instructed version sync of an already-released feature, recorded here under User Supersession; the owning agents may review on their next shift but no rework is expected (content is byte-identical to the installed copy they last produced).
-- No installed-copy re-sync is pending: the installed copies are the source for this shift and remain at 2.4.0. If the repo later diverges, the standard repo→installed sync resumes.
+- Il lavoro ha modificato `CONTRIBUTORS.md`, `CONTRIBUTORS_IT.md` e `references/handoff-template.md`, storicamente Claude-owned. L'utente ha autorizzato esplicitamente l'opzione di correzione completa sul `main` corrente: modifiche registrate come User Supersession; Claude puo revisionarle in seguito.
+- `shellcheck` non e installato localmente sull'host Bluefin immutabile. La sintassi Bash e tutti i test sono verdi; il lint statico resta coperto dalla CI GitHub gia configurata e dovra essere osservato dopo il push.
+- Il diff e pronto per il commit diretto su `main`, esplicitamente richiesto dall'utente. `origin/main` e ancora al commit di partenza `bbf2f7b`, quindi non esiste divergenza remota.
+- Il token separato di `gh` risulta scaduto, ma `git push --dry-run origin main` e riuscito con le credenziali Git configurate; la pubblicazione diretta non dipende da `gh`.
 
 ## Next agent starts from
-**Next agent: task-fit decides — il repository locale e quello remoto su GitHub sono completamente inizializzati, allineati alla versione 2.4.0 e sincronizzati su main. Tutti i test passano. La collaborazione è pienamente attiva.**
+**Next agent: Codex — creare il commit di release `2.5.0` escludendo `cli-collaboration.png`, pushare `main`, osservare GitHub Actions e poi registrare commit/check finali nel handoff con un ultimo commit documentale.**
 
 Do not touch: `final-skill.md`, `workflow.md`, or `progetti-1-2.md` (user-reserved). Do not touch `cli-collaboration.png`; it was already untracked before this shift and is unrelated.
 
 ## History
+- 2026-07-20T17:59:20+02:00 - Codex: Completata la documentazione Grok richiesta dall'utente in README, guidance root, esempi, adapter, template, crediti e changelog. Le fonti ufficiali Gemini incluse nella CLI hanno confermato che `.agents/skills` e alias prioritario di `.gemini/skills`; riprodotto il warning di duplicazione, aggiunta regressione RED, rimossi i default duplicati e verificata la skill Gemini abilitata senza conflitti. Antigravity resta target esplicito; cinque installazioni reali non duplicate sincronizzate. Release pronta per commit/push diretto su `main`. (in-progress)
+- 2026-07-20T17:44:03+02:00 - Codex: Su richiesta esplicita dell'utente, sincronizzate alla sorgente `2.5.0` le copie reali Codex, `.agents`, Gemini standard, Gemini/Antigravity, Grok e Claude. Verificate tutte con `sync-skill.sh`; Grok scopre una sola skill invocabile, Gemini la carica abilitata da `.agents` e segnala la copia identica `.gemini/skills` come override non bloccante. Backup preservati fuori dalle directory di discovery. (done)
+- 2026-07-20T17:29:49+02:00 - Codex: Corretto il port Grok in una release condivisa `2.5.0` compatibile con Codex, Claude Code, Gemini CLI e Grok Build; aggiunti adapter/metadata/test Grok, preservati parser e ABI storici, normalizzati i permessi, risolta una race dei fixture, verificati validator, 6/6 gate meccanici, 24/24 test lingua, install/sync su quattro target temporanei e discovery reale con Grok 0.2.106. Nessun commit, push o sync delle installazioni reali. Modifiche cross-ownership autorizzate dall'utente sotto User Supersession. (done)
 - 2026-05-24T23:48:00+02:00 - Gemini CLI: Risolto avvisi ShellCheck (SC2295 e SC1090) in lang.sh e lang-tests.sh, eseguito il push su main, sincronizzate tutte le installazioni locali (.codex, .agents, .gemini) rimuovendo il drift e spostando i backup per evitare conflitti. (done)
 - 2026-05-24T23:42:00+02:00 - Gemini CLI: Inizializzato il repository locale Git ripristinando il folder `.git` originale da `evals/.git` alla radice del workspace, verificato lo stato con i test passanti (5/5 mechanical checks e 24/24 lang tests verdi), eseguito il commit di tutte le modifiche locali della v2.4.0 ed effettuato il push con successo sul branch `main` del repository remoto GitHub (`Spe1977/cli-collaboration`). (done)
 - 2026-05-24T23:28:29+02:00 - Claude Code: Updated the repository source from 2.3.0 to 2.4.0 to match the installed copy at `~/.claude/skills/cli-collaboration` (inverse of the prior repo→installed syncs). The 2.4.0 delta is the **Language Preference** feature: synced `SKILL.md` (version bump + `## Language Preference` section), `references/{claude,codex,gemini}-adapter.md` (documentary notes), `scripts/install-skill.sh`, `scripts/sync-skill.sh` (new Gemini home target), plus new `scripts/lang.sh` and `scripts/test-fixtures/lang-tests.sh`, via `rsync -av` (installed→repo). Reviewed the pre-sync content diff first (only version bump + language feature + Gemini target). Under explicit user authorization, bumped the repo-root release docs that the installed copy does not carry: `README.md`/`README_IT.md` version line and a new `CHANGELOG.md [2.4.0]` entry (also promoting the prior `Unreleased` brainstorming items). Edited Codex-owned and Gemini-owned files under User Supersession (noted in Open concerns). Verified `diff -qr` (no diff), `evals/run-mechanical-checks.sh` (5/5 green), `lang-tests.sh` (24/24 green). (done)

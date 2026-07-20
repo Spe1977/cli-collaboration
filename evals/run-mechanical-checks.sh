@@ -4,10 +4,11 @@
 #
 # Runs:
 #   1. Ownership parser fixtures (run-tests.sh)
-#   2. Install rollback fixture (install-rollback-test.sh)
-#   3. Structural lint on AGENT_HANDOFF.md (lint-handoff.py)
-#   4. SKILL.md frontmatter parse + required-fields check (inline Python)
-#   5. check-ownership.sh source-guard: refuses literal U+2013/U+2014 in
+#   2. Grok/multi-CLI portability fixture (grok-portability-tests.sh)
+#   3. Install rollback fixture (install-rollback-test.sh)
+#   4. Structural lint on AGENT_HANDOFF.md (lint-handoff.py)
+#   5. SKILL.md frontmatter parse + required-fields check (inline Python)
+#   6. check-ownership.sh source-guard: refuses literal U+2013/U+2014 in
 #      patterns (re-introducing them broke macOS Bash 3.2). Implemented in
 #      Python rather than `grep -P` because BSD grep on macOS lacks -P.
 #
@@ -31,6 +32,7 @@ require_file() {
 }
 
 require_file "skills/cli-collaboration/scripts/test-fixtures/run-tests.sh"
+require_file "skills/cli-collaboration/scripts/test-fixtures/grok-portability-tests.sh"
 require_file "skills/cli-collaboration/scripts/test-fixtures/install-rollback-test.sh"
 require_file "evals/lint-handoff.py"
 require_file "skills/cli-collaboration/SKILL.md"
@@ -41,16 +43,19 @@ python3 -c "import yaml" 2>/dev/null || fail "PyYAML not installed (pip install 
 
 step() { printf '\n== %s ==\n' "$1"; }
 
-step "1/5 ownership parser fixtures"
+step "1/6 ownership parser fixtures"
 bash skills/cli-collaboration/scripts/test-fixtures/run-tests.sh
 
-step "2/5 install rollback fixture"
+step "2/6 Grok and multi-CLI portability fixture"
+bash skills/cli-collaboration/scripts/test-fixtures/grok-portability-tests.sh
+
+step "3/6 install rollback fixture"
 bash skills/cli-collaboration/scripts/test-fixtures/install-rollback-test.sh
 
-step "3/5 AGENT_HANDOFF.md structural lint"
+step "4/6 AGENT_HANDOFF.md structural lint"
 python3 evals/lint-handoff.py AGENT_HANDOFF.md
 
-step "4/5 SKILL.md frontmatter check"
+step "5/6 SKILL.md frontmatter check"
 python3 - <<'PY'
 import sys, pathlib, yaml
 
@@ -92,7 +97,7 @@ extra = sorted(set(data.keys()) - {"name", "description"})
 print(f"ok   frontmatter parses; name+description present; extra fields: {extra or 'none'}")
 PY
 
-step "5/5 check-ownership.sh source-guard"
+step "6/6 check-ownership.sh source-guard"
 python3 - <<'PY'
 """Refuse literal en-dash (U+2013, bytes E2 80 93) or em-dash (U+2014,
 bytes E2 80 94) anywhere in check-ownership.sh. The parser now ignores
