@@ -40,6 +40,7 @@ fi
 if grep -q '^Agent: Grok$' "$SKILL_MD"; then
   fail "shared end-of-shift template hardcodes Grok"
 fi
+# shellcheck disable=SC2016 # The regression guard searches for a literal variable name.
 if grep -q '\$GROK_SKILL_HOME' "$SKILL_MD"; then
   fail "shared SKILL.md contains Grok-only paths"
 fi
