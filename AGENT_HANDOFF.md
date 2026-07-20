@@ -1,8 +1,8 @@
 # AGENT_HANDOFF.md
 
-**Last updated:** 2026-07-20T18:06:43+02:00
+**Last updated:** 2026-07-20T18:10:43+02:00
 **Last agent:** Codex
-**Status:** in-progress
+**Status:** done
 
 ## Current task
 Completare la documentazione Grok/Gemini/Antigravity della release `2.5.0`, pubblicare il commit su `origin/main` e verificare GitHub Actions.
@@ -13,7 +13,7 @@ Completare la documentazione Grok/Gemini/Antigravity della release `2.5.0`, pubb
 - Aggiunti adapter Grok, metadata documentali e fixture di portabilita. Grok 0.2.106 scopre correttamente la copia installata in una home temporanea come skill utente invocabile.
 - Ripristinati i permessi corretti dei file e ignorato solo lo stato locale `.claude/settings.local.json`; `cli-collaboration.png` e i file user-reserved non sono stati toccati.
 - Le copie realmente installate per Codex, `.agents`/Gemini, Gemini/Antigravity, Grok e Claude sono byte-identiche alla sorgente `2.5.0`; la copia Gemini duplicata e tutti i backup sono stati spostati fuori dalle directory di discovery.
-- Il commit di release `29b3fd0` e stato pushato su `origin/main`. I fixture Ubuntu/macOS sono verdi; il job ShellCheck ha rilevato un solo `SC2016` intenzionale nel regression guard, ora soppresso localmente con motivazione e verificato nel container ufficiale ShellCheck.
+- Il commit di release `29b3fd0` e la correzione CI `9f19636` sono su `origin/main`. GitHub Actions e completamente verde: ShellCheck, fixture Ubuntu e fixture macOS hanno conclusione `success`.
 
 ## File ownership
 ### agent-owned
@@ -96,15 +96,16 @@ No frozen files currently declared.
 ## Open concerns
 - Il lavoro ha modificato `CONTRIBUTORS.md`, `CONTRIBUTORS_IT.md` e `references/handoff-template.md`, storicamente Claude-owned. L'utente ha autorizzato esplicitamente l'opzione di correzione completa sul `main` corrente: modifiche registrate come User Supersession; Claude puo revisionarle in seguito.
 - `shellcheck` non e installato localmente sull'host Bluefin immutabile. La sintassi Bash e tutti i test sono verdi; il lint statico resta coperto dalla CI GitHub gia configurata e dovra essere osservato dopo il push.
-- Il commit di release `29b3fd0` e su `origin/main`; resta da pushare la correzione ShellCheck e verificare il nuovo run GitHub Actions.
+- Release `2.5.0` e correzione CI sono pubblicate su `origin/main`; installazioni reali e repository sono allineati.
 - Il token separato di `gh` risulta scaduto, ma `git push --dry-run origin main` e riuscito con le credenziali Git configurate; la pubblicazione diretta non dipende da `gh`.
 
 ## Next agent starts from
-**Next agent: Codex — committare e pushare la correzione ShellCheck, attendere GitHub Actions e poi registrare commit/check finali nel handoff con un ultimo commit documentale.**
+**Next agent: task-fit decides — `main` contiene la release portabile `2.5.0` con riferimenti Grok e documentazione Gemini/Antigravity; tutte le installazioni locali sono sincronizzate e tutti i check GitHub Actions sono verdi. Nessuna azione correttiva pendente.**
 
 Do not touch: `final-skill.md`, `workflow.md`, or `progetti-1-2.md` (user-reserved). Do not touch `cli-collaboration.png`; it was already untracked before this shift and is unrelated.
 
 ## History
+- 2026-07-20T18:10:43+02:00 - Codex: Pushata la correzione CI `9f19636`; GitHub Actions completata con successo su ShellCheck, fixture Ubuntu e fixture macOS. Release `2.5.0`, documentazione Grok/Gemini/Antigravity e cinque installazioni locali non duplicate risultano allineate. Handoff chiuso per ultimo. (done)
 - 2026-07-20T18:06:43+02:00 - Codex: Pushato su `origin/main` il commit di release `29b3fd0`. GitHub Actions: fixture Ubuntu/macOS verdi, ShellCheck rosso per un solo `SC2016` nel guard che cerca intenzionalmente `$GROK_SKILL_HOME` letterale. Riprodotto con il container ufficiale, aggiunta soppressione locale motivata, container ora verde; installazioni reali risincronizzate. Correzione CI pronta per commit/push. (in-progress)
 - 2026-07-20T17:59:20+02:00 - Codex: Completata la documentazione Grok richiesta dall'utente in README, guidance root, esempi, adapter, template, crediti e changelog. Le fonti ufficiali Gemini incluse nella CLI hanno confermato che `.agents/skills` e alias prioritario di `.gemini/skills`; riprodotto il warning di duplicazione, aggiunta regressione RED, rimossi i default duplicati e verificata la skill Gemini abilitata senza conflitti. Antigravity resta target esplicito; cinque installazioni reali non duplicate sincronizzate. Release pronta per commit/push diretto su `main`. (in-progress)
 - 2026-07-20T17:44:03+02:00 - Codex: Su richiesta esplicita dell'utente, sincronizzate alla sorgente `2.5.0` le copie reali Codex, `.agents`, Gemini standard, Gemini/Antigravity, Grok e Claude. Verificate tutte con `sync-skill.sh`; Grok scopre una sola skill invocabile, Gemini la carica abilitata da `.agents` e segnala la copia identica `.gemini/skills` come override non bloccante. Backup preservati fuori dalle directory di discovery. (done)
