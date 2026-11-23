@@ -30,13 +30,17 @@ ${GROK_HOME:-$HOME/.grok}/skills/cli-collaboration
 From the repository root, install only the Grok copy with:
 
 ```bash
+skills/cli-collaboration/scripts/install-skill.sh --grok
+# equivalent explicit target:
 skills/cli-collaboration/scripts/install-skill.sh \
   --target "${GROK_HOME:-$HOME/.grok}/skills/cli-collaboration"
 ```
 
-With no `--target`, the installer updates the Codex, interoperable Agents, and
+With no flags, the installer updates the Codex, interoperable Agents, and
 Grok user homes. Gemini CLI discovers the Agents alias, so no duplicate Gemini
-copy is created. The sync script uses the same defaults.
+copy is created. Pass `--antigravity` or `--claude` (or `--all`) to include
+Antigravity IDE and Claude Code targets. The sync script uses the same defaults
+and preset flags.
 
 On Bluefin, Fedora Silverblue, and other immutable hosts, keep the skill under
 the mutable user home (commonly `/var/home/<user>`). Do not layer it into the
@@ -65,6 +69,7 @@ Use these values consistently:
 | Environment override | `CLI_COLLAB_AGENT=Grok` |
 
 Prefer the bare owner name `Grok`; model-version suffixes are unnecessary.
+Keep `Grok` distinct from `Codex`, `Claude`, `Gemini`, and `Antigravity`.
 
 ## Tool Mapping
 

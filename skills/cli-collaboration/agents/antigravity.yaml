@@ -1,0 +1,24 @@
+# Antigravity metadata for cli-collaboration.
+#
+# DOCUMENTATION-ONLY for package symmetry with openai.yaml, claude.yaml, and
+# grok.yaml. Antigravity IDE, Antigravity 2.0, and `agy` CLI discover skills
+# natively via SKILL.md frontmatter under ~/.gemini/config/skills/ or
+# workspace .agents/skills/ (plus optional rules in GEMINI.md / AGENTS.md and
+# lifecycle hooks in hooks.json).
+#
+# See references/antigravity-adapter.md for the active integration surface.
+
+interface:
+  display_name: "CLI Collaboration"
+  short_description: "Coordinate Antigravity and CLI agents safely via AGENT_HANDOFF.md"
+  default_prompt: >
+    Activate cli-collaboration. Read AGENT_HANDOFF.md before editing, declare the
+    Start Gate, check ownership with --agent Antigravity, respect user-reserved
+    and frozen sections, and update AGENT_HANDOFF.md last.
+  agent_name: "Antigravity"
+  install_path: "${ANTIGRAVITY_CONFIG_HOME:-$HOME/.gemini/config}/skills/cli-collaboration"
+
+metadata:
+  documentation_only: true
+  consumed_by: "none — Antigravity uses SKILL.md + rules + hooks.json"
+  authoritative_adapter: "references/antigravity-adapter.md"

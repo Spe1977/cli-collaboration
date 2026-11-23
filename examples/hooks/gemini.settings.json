@@ -1,0 +1,30 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "name": "cli-collaboration-session",
+            "type": "command",
+            "command": "python3 ~/.agents/skills/cli-collaboration/scripts/hook-guard.py --runtime gemini --event session-start",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "BeforeTool": [
+      {
+        "matcher": "write_file|replace|run_shell_command|execute_command",
+        "hooks": [
+          {
+            "name": "cli-collaboration-guard",
+            "type": "command",
+            "command": "python3 ~/.agents/skills/cli-collaboration/scripts/hook-guard.py --runtime gemini --event pre-tool",
+            "timeout": 5000
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/skills/cli-collaboration/scripts/hook-guard.py --runtime claude --event session-start"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/skills/cli-collaboration/scripts/hook-guard.py --runtime claude --event pre-tool"
+          }
+        ]
+      }
+    ]
+  }
+}

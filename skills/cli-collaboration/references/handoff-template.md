@@ -12,7 +12,7 @@ For non-code workflows, keep the same handoff discipline. Test fields may be rep
 # AGENT_HANDOFF.md
 
 **Last updated:** <ISO 8601 timestamp with timezone>
-**Last agent:** <Codex | Claude Code | Gemini CLI | Grok | other>
+**Last agent:** <Codex | Claude Code | Gemini CLI | Grok | Antigravity | other>
 **Status:** <bootstrap | in-progress | done | blocked | paused>
 
 ## Current task
@@ -73,7 +73,7 @@ For non-code workflows, keep the same handoff discipline. Test fields may be rep
 - `### agent-owned`, `### user-reserved`, `### frozen` are the only three subsections accepted by the parser, and all three headings are required. Empty subsections are allowed; write `No frozen files currently declared.` rather than deleting the heading.
 - Line shape, parsed exactly: `- <path-or-glob>: <agent-name> — <reason>`. The canonical separator is the em-dash `—` (U+2014). The parser tolerates en-dash (`–`), a regular hyphen surrounded by spaces (` - `), and `--`, but generated handoffs should still use the canonical em-dash.
 - Patterns are bash `case` patterns. `*` matches any sequence of characters **including `/`**, so `scripts/*` matches both `scripts/foo.sh` and `scripts/sub/foo.sh`. When you need to scope to a single directory level, use explicit path segments (e.g. list `scripts/foo.sh` and `scripts/bar.sh` rather than relying on `*` to stop at a slash). `**` is not a recognized token.
-- Parenthetical annotations (e.g. `Claude (pending Phase 2)`) are advisory: the parser strips them, so the owner above compares as `Claude`.
+- Agent alias & path normalization (v2.6.0+): `check-ownership.sh` strips parenthetical annotations (`Claude (pending Phase 2)` -> `claude`), normalizes aliases (`Claude Code` -> `claude`, `Gemini CLI` -> `gemini`, `OpenAI Codex` -> `codex`, `Grok Build` -> `grok`, `Antigravity IDE` / `agy` -> `antigravity` — keeping `antigravity` and `gemini` distinct), strips leading `./` prefixes, and relativizes absolute paths inside the handoff directory.
 - Reassignment is a handoff event. Note the previous owner in the `## History` block when changing an ownership line.
 
 **Files changed this shift**

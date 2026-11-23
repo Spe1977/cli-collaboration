@@ -1,0 +1,30 @@
+{
+  "cli-collaboration": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "python3 ~/.gemini/config/skills/cli-collaboration/scripts/hook-guard.py --runtime antigravity --event session-start",
+        "timeout": 5
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "write_file|edit_file|run_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.gemini/config/skills/cli-collaboration/scripts/hook-guard.py --runtime antigravity --event pre-tool",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "python3 ~/.gemini/config/skills/cli-collaboration/scripts/hook-guard.py --runtime antigravity --event stop",
+        "timeout": 5
+      }
+    ]
+  }
+}

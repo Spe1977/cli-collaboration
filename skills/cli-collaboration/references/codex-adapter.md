@@ -10,7 +10,7 @@ For single-agent continuation, treat `AGENT_HANDOFF.md` as persistent project me
 
 ## Project Guidance
 
-Add this to project `AGENTS.md` when the repo should enforce collaboration:
+Add this to project `AGENTS.md` when the repo should enforce collaboration (see `examples/AGENTS.md`):
 
 ```markdown
 When `AGENT_HANDOFF.md` exists, read it before editing. Declare the cli-collaboration start gate, respect `agent-owned`, `user-reserved`, and `frozen` sections, and update the handoff last.
@@ -27,29 +27,26 @@ Pause only disables procedural overhead. It never permits destructive cleanup or
 
 ## Script ABI
 
-All scripts expect to run from any cwd and resolve paths from their own location unless a path flag is supplied.
+All scripts expect to run from any cwd and resolve paths from their own location (`<SKILL_DIR>/scripts/`) unless a path flag is supplied.
 
 - `scripts/check-ownership.sh [--handoff PATH] [--agent NAME] FILE...`
   - `0`: valid ownership and no conflict detected.
   - `1`: conflict with `agent-owned`, `user-reserved`, or `frozen`.
   - `2`: usage error, missing handoff, or malformed ownership section.
-  - **Implementation note (v2.3.0)**: `check-ownership.sh` is a thin Bash wrapper that delegates to `scripts/parse-ownership.py`. Python 3 is therefore a runtime dependency of the ownership check. The CLI contract above (flags, env var, exit codes, conflict-message wording) is unchanged; only the implementation moved out of Bash, because macOS Bash 3.2.57 proved unreliable on multibyte UTF-8 input (en-dash, em-dash) across seven distinct Bash-side mitigations.
-- `scripts/install-skill.sh [--dry-run] [--source DIR] [--target DIR ...]`
+  - **Implementation note (v2.3.0+):** `check-ownership.sh` is a thin Bash wrapper delegating to `scripts/parse-ownership.py` (Python 3 runtime dependency). In v2.6.0, `parse-ownership.py` also strips `./` prefixes, relativizes absolute paths within the handoff directory, and normalizes agent aliases (`OpenAI Codex` -> `codex`, `Claude Code` -> `claude`, `Gemini CLI` -> `gemini`, `Grok Build` -> `grok`, `Antigravity IDE` / `agy` -> `antigravity`, keeping `antigravity` and `gemini` distinct).
+- `scripts/install-skill.sh [--dry-run] [--source DIR] [--target DIR ...] [--codex] [--agents] [--grok] [--claude] [--antigravity] [--gemini] [--all]`
   - Dry-run prints planned copies.
-  - Non-dry-run backs up divergent targets before copying.
-- `scripts/sync-skill.sh [--install] [--source DIR] [--target DIR ...]`
-  - Read-only by default.
-  - Reports all missing or drifted targets before exiting.
+  - Non-dry-run backs up divergent pre-existing targets to a sibling `../skills-backups/` directory (outside `skills/`) before copying, and rolls back automatically on failure (exit `3`).
+  - Default targets (when no `--target` or preset flag is given): `${CODEX_HOME:-$HOME/.codex}/skills/cli-collaboration`, `${AGENTS_HOME:-$HOME/.agents}/skills/cli-collaboration`, and `${GROK_HOME:-$HOME/.grok}/skills/cli-collaboration`.
+  - `--all` targets Codex, Agents, Grok, Claude, and Antigravity (`~/.gemini/skills` stays explicit opt-in via `--gemini` to avoid Gemini duplicate-skill conflicts with `~/.agents/skills`).
+- `scripts/sync-skill.sh [--install] [--source DIR] [--target DIR ...] [preset flags...]`
+  - Read-only by default; reports `in-sync`, `drift`, or `missing` for every target.
   - `--install` delegates updates to `install-skill.sh`.
-
-Default install targets are
-`${CODEX_HOME:-$HOME/.codex}/skills/cli-collaboration`,
-`${AGENTS_HOME:-$HOME/.agents}/skills/cli-collaboration`,
-`${GROK_HOME:-$HOME/.grok}/skills/cli-collaboration`. Use `--target` when only
-one runtime should be updated. Gemini CLI discovers the interoperable Agents
-target as an alias of `~/.gemini/skills`; do not install both aliases unless a
-specific environment requires separate copies. Claude and Antigravity remain
-explicit targets.
+- `scripts/lang.sh {get|set <lang> [--force] [--local] [--by NAME]|ensure-noninteractive}`
+  - `get` checks global `${CLI_COLLAB_CONFIG_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/cli-collaboration/config.json}`, then project-local `${CLI_COLLAB_LOCAL_CONFIG:-.cli-collaboration.json}`, then `$CLI_COLLAB_LANG`, returning `3` if unset.
+  - `set --local` writes project-local `.cli-collaboration.json`; `set` exits cleanly with `4` if the target config directory is read-only or sandboxed.
+- `scripts/hook-guard.py --runtime <antigravity|claude|gemini> --event <session-start|pre-tool|stop> [--agent NAME] [--destructive-mode ask|deny]`
+  - Stdlib-only deterministic guardrail script importing `parse-ownership.py` directly; emits runtime-native hook JSON on stdout.
 
 ## Ownership Format
 
@@ -61,16 +58,12 @@ explicit targets.
 
 The `### agent-owned`, `### user-reserved`, and `### frozen` headings are all required, even when a section is empty. Empty sections may use prose such as `No frozen files currently declared.` under the heading.
 
-The canonical separator is the em-dash (`—`). The parser (v2.3.0+, Python) extracts the owner as the first whitespace-delimited token after the colon and ignores the separator entirely, so en-dash (`–`), em-dash (`—`), ASCII hyphen (`-`), and double-hyphen (`--`) all work interchangeably. Generated handoffs should still use the canonical em-dash for stylistic consistency.
+The canonical separator is the em-dash (`—`). The parser ignores the separator (`—`, `–`, `--`, or ` - `) and extracts the owner phrase prior to it, stripping parenthetical notes and normalizing recognized aliases (`Claude (pending Phase 2)` -> `claude`, `Antigravity IDE` -> `antigravity`). Generated handoffs should still use the canonical em-dash for stylistic consistency.
 
-Globs use bash `case`-pattern semantics: `*` matches any sequence of characters **including `/`**, so `scripts/*` covers nested paths such as `scripts/sub/foo.sh`. Use explicit path segments when you want to scope to a single directory level. `**` is not a recognized token. Agent names may include parenthetical annotations; the parser strips them for comparison, so `Claude (pending Phase 2)` compares as `Claude`.
+Globs use bash `case`-pattern semantics: `*` matches any sequence of characters **including `/`**, so `scripts/*` covers nested paths such as `scripts/sub/foo.sh`. Use explicit path segments when you need to scope to a single directory level. `**` is not a recognized token.
 
 Only one active writer should update `AGENT_HANDOFF.md` at a time. If a concurrent write is observed, record the incident in `AGENT_HANDOFF.md` history; `docs/future-architecture.md` defines when to promote the protocol to flock-based locking.
 
 ## Language Preference (documentary)
 
-This adapter does not execute anything. The binding behavior lives in
-`SKILL.md` → `## Language Preference`. As the final step of activation, run
-`scripts/lang.sh get`; if unset, ask `Choose your language:` in English and run
-`scripts/lang.sh set "<answer>" --by CODEX`. The global config is at
-`${XDG_CONFIG_HOME:-$HOME/.config}/cli-collaboration/config.json`.
+Binding behavior lives in `SKILL.md` → `## Language Preference`. Run `<SKILL_DIR>/scripts/lang.sh get`; if unset and writable, ask `Choose your language:` in English and run `scripts/lang.sh set "<answer>" --by CODEX` (or continue in the user's prompt language if sandboxed / exit `4`).

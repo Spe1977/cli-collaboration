@@ -1,21 +1,30 @@
 #!/usr/bin/env bash
-# lang.sh — manage the cli-collaboration global language preference.
-# Single source of truth: ${XDG_CONFIG_HOME:-$HOME/.config}/cli-collaboration/config.json
-# No runtime dependency on jq: writes via printf, reads via portable sed.
+# lang.sh — manage the cli-collaboration language preference.
+# Precedence on `get`:
+#   1. Global config: ${CLI_COLLAB_CONFIG_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/cli-collaboration/config.json}
+#   2. Project-local config: ${CLI_COLLAB_LOCAL_CONFIG:-.cli-collaboration.json}
+#   3. Environment fallback: $CLI_COLLAB_LANG
+# Exit codes:
+#   0  success
+#   2  usage error
+#   3  get: language not configured
+#   4  set: target config directory/file is read-only or sandboxed
 set -u
 
 config_dir()  { printf '%s/cli-collaboration' "${XDG_CONFIG_HOME:-$HOME/.config}"; }
-config_path() { printf '%s/config.json' "$(config_dir)"; }
+config_path() { printf '%s' "${CLI_COLLAB_CONFIG_FILE:-$(config_dir)/config.json}"; }
+local_config_path() { printf '%s' "${CLI_COLLAB_LOCAL_CONFIG:-.cli-collaboration.json}"; }
 
-# read_field <field> -> prints the string value (possibly empty); returns 1 if file missing.
+# read_field <field> [file] -> prints the string value (possibly empty); returns 1 if unreadable.
 # Reads symmetrically with the JSON escaping done by escape_json: the value may
 # contain escaped quotes (\") and backslashes (\\), so we cannot stop at the
 # first quote. We isolate the value between the opening quote and the line's
 # trailing quote, then unescape \\ -> \ and \" -> " (no jq dependency).
 read_field() {
-  local field="$1" file line val
-  file="$(config_path)"
-  [ -f "$file" ] || return 1
+  local field="$1"
+  local file line val
+  file="${2:-$(config_path)}"
+  [ -f "$file" ] && [ -r "$file" ] || return 1
   line="$(grep -m1 "\"$field\"[[:space:]]*:" "$file" 2>/dev/null)" || true
   [ -n "$line" ] || return 0
   val="${line#*\""$field"\"}"               # drop everything up to and incl. "field"
@@ -29,12 +38,44 @@ read_field() {
   printf '%s' "$val"
 }
 
-cmd_get() {
+read_lang_from_file() {
+  local file="$1"
   local lang label
-  lang="$(read_field language 2>/dev/null || true)"
-  label="$(read_field language_label 2>/dev/null || true)"
-  if [ -n "$lang" ];  then printf '%s\n' "$lang";  return 0; fi
-  if [ -n "$label" ]; then printf '%s\n' "$label"; return 0; fi
+  lang="$(read_field language "$file" 2>/dev/null || true)"
+  label="$(read_field language_label "$file" 2>/dev/null || true)"
+  if [ -n "$lang" ]; then
+    printf '%s\n' "$lang"
+    return 0
+  fi
+  if [ -n "$label" ]; then
+    printf '%s\n' "$label"
+    return 0
+  fi
+  return 1
+}
+
+cmd_get() {
+  local global_file local_file
+  global_file="$(config_path)"
+  if read_lang_from_file "$global_file"; then
+    return 0
+  fi
+
+  local_file="$(local_config_path)"
+  if read_lang_from_file "$local_file"; then
+    return 0
+  fi
+
+  if [ -n "${CLI_COLLAB_LANG:-}" ]; then
+    normalize_lang "$CLI_COLLAB_LANG"
+    if [ -n "$NL_CODE" ]; then
+      printf '%s\n' "$NL_CODE"
+    else
+      printf '%s\n' "$NL_LABEL"
+    fi
+    return 0
+  fi
+
   return 3
 }
 
@@ -62,46 +103,99 @@ normalize_lang() {
   esac
 }
 
-is_configured() {
+is_configured_file() {
+  local file="$1"
   local lang label
-  lang="$(read_field language 2>/dev/null || true)"
-  label="$(read_field language_label 2>/dev/null || true)"
+  lang="$(read_field language "$file" 2>/dev/null || true)"
+  label="$(read_field language_label "$file" 2>/dev/null || true)"
   [ -n "$lang" ] || [ -n "$label" ]
 }
 
+is_configured() {
+  is_configured_file "$(config_path)"
+}
+
 write_config() {
-  local code="$1" label="$2" by="$3" dir file tmp ts esc_label esc_by
-  dir="$(config_dir)"; file="$(config_path)"
+  local code="$1" label="$2" by="$3"
+  local file dir tmp ts esc_label esc_by
+  file="${4:-$(config_path)}"
+  dir="$(dirname "$file")"
   ts="$(date +%Y-%m-%dT%H:%M:%S%z)"
   esc_label="$(escape_json "$label")"
   esc_by="$(escape_json "$by")"
-  mkdir -p "$dir"; chmod 0700 "$dir" 2>/dev/null || true
-  tmp="$(mktemp "$dir/.config.json.XXXXXX")"
-  printf '{\n  "version": 1,\n  "language": "%s",\n  "language_label": "%s",\n  "set_by": "%s",\n  "set_at": "%s"\n}\n' \
-    "$code" "$esc_label" "$esc_by" "$ts" > "$tmp"
-  chmod 0600 "$tmp"
-  mv "$tmp" "$file"
+
+  if ! mkdir -p "$dir" 2>/dev/null; then
+    printf 'lang.sh: cannot write config at %s (sandboxed or read-only); pass --local or use prompt language\n' "$file" >&2
+    return 4
+  fi
+
+  if [ "$dir" = "$(config_dir)" ]; then
+    chmod 0700 "$dir" 2>/dev/null || true
+  fi
+
+  if ! tmp="$(mktemp "$dir/.config.json.XXXXXX" 2>/dev/null)"; then
+    printf 'lang.sh: cannot write config at %s (sandboxed or read-only); pass --local or use prompt language\n' "$file" >&2
+    return 4
+  fi
+
+  if ! printf '{\n  "version": 1,\n  "language": "%s",\n  "language_label": "%s",\n  "set_by": "%s",\n  "set_at": "%s"\n}\n' \
+    "$code" "$esc_label" "$esc_by" "$ts" > "$tmp" 2>/dev/null; then
+    rm -f "$tmp" 2>/dev/null || true
+    printf 'lang.sh: cannot write config at %s (sandboxed or read-only); pass --local or use prompt language\n' "$file" >&2
+    return 4
+  fi
+
+  chmod 0600 "$tmp" 2>/dev/null || true
+  if ! mv "$tmp" "$file" 2>/dev/null; then
+    rm -f "$tmp" 2>/dev/null || true
+    printf 'lang.sh: cannot write config at %s (sandboxed or read-only); pass --local or use prompt language\n' "$file" >&2
+    return 4
+  fi
 }
 
 cmd_set() {
-  local input="" by="${CLI_COLLAB_AGENT:-unknown}" force=0
+  local input="" by="${CLI_COLLAB_AGENT:-unknown}" force=0 use_local=0 target_file rc
   while [ "$#" -gt 0 ]; do
     case "$1" in
       --force) force=1 ;;
-      --by) shift; by="${1:-unknown}" ;;
+      --local) use_local=1 ;;
+      --by)
+        shift
+        if [ "$#" -eq 0 ]; then
+          printf 'lang.sh: --by requires an argument\n' >&2
+          return 2
+        fi
+        by="$1"
+        ;;
       -*) printf 'lang.sh: unknown option: %s\n' "$1" >&2; return 2 ;;
       *) if [ -z "$input" ]; then input="$1"; else input="$input $1"; fi ;;
     esac
     shift
   done
+
   [ -n "$input" ] || { printf 'lang.sh: set requires a language argument\n' >&2; return 2; }
-  if [ "$force" -eq 0 ] && is_configured; then
-    cmd_get
+
+  if [ "$use_local" -eq 1 ]; then
+    target_file="$(local_config_path)"
+  else
+    target_file="$(config_path)"
+  fi
+
+  if [ "$force" -eq 0 ] && is_configured_file "$target_file"; then
+    read_lang_from_file "$target_file" || true
     return 0
   fi
+
   normalize_lang "$input"
-  write_config "$NL_CODE" "$NL_LABEL" "$by"
-  cmd_get
+  write_config "$NL_CODE" "$NL_LABEL" "$by" "$target_file"
+  rc=$?
+  [ "$rc" -eq 0 ] || return "$rc"
+
+  if [ -n "$NL_CODE" ]; then
+    printf '%s\n' "$NL_CODE"
+  else
+    printf '%s\n' "$NL_LABEL"
+  fi
 }
 
 cmd_ensure_noninteractive() {
@@ -116,8 +210,10 @@ main() {
     get) cmd_get "$@" ;;
     set) cmd_set "$@" ;;
     ensure-noninteractive) cmd_ensure_noninteractive "$@" ;;
-    *)   printf 'usage: lang.sh {get|set <lang> [--force] [--by NAME]|ensure-noninteractive}\n' >&2; return 2 ;;
+    *)   printf 'usage: lang.sh {get|set <lang> [--force] [--local] [--by NAME]|ensure-noninteractive}\n' >&2; return 2 ;;
   esac
 }
 
-main "$@"
+if [ "${BASH_SOURCE[0]:-$0}" = "$0" ]; then
+  main "$@"
+fi
