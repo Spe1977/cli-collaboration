@@ -1,17 +1,18 @@
 # AGENT_HANDOFF.md
 
-**Last updated:** 2026-11-23T14:04:39+01:00
+**Last updated:** 2026-11-23T14:17:47+01:00
 **Last agent:** Antigravity
-**Status:** in-progress
+**Status:** done
 
 ## Current task
-Reconcile `main` onto `origin/main` (`5954dfd`, `v2.5.0`), update contributors and release documentation for `v2.6.0`, run local mechanical checks, and prepare GitHub CI verification, release publication (`v2.6.0`), and repository About updates under explicit User Supersession.
+Record final GitHub `v2.6.0` release metadata, green CI verification, updated `CONTRIBUTORS*.md` / docs, and updated GitHub About description and topics under explicit User Supersession.
 
 ## Current state
-- **User Supersession (2026-11-23):** User authorized Antigravity to reconcile local `main` onto `origin/main`, add/update Antigravity in contributors, refresh `v2.6.0` documentation, verify CI, publish the `v2.6.0` GitHub Release, and improve repository description/topics while keeping `### user-reserved` (`final-skill.md`, `workflow.md`, `progetti-1-2.md`), `cli-collaboration.png`, `graphify-out/`, and `.claude/` untouched.
-- **Git history & hygiene reconciled:** Fast-forwarded local `main` index cleanly onto `origin/main` (`5954dfd`), restored `docs/superpowers/{plans,specs}/2026-07-20-grok-multicli-compatibility*`, `.gitignore`, and `brainplan.md`, normalized file modes (`0644` non-scripts / `0755` scripts), and preserved authentic `v2.5.0` history in `CHANGELOG.md` and `CONTRIBUTORS*.md`.
+- **User Supersession (2026-11-23):** User authorized Antigravity to reconcile local `main` onto `origin/main`, add/update Antigravity among contributors, refresh `v2.6.0` docs, push to GitHub, verify CI, publish `v2.6.0`, and improve repository description/topics while keeping `### user-reserved` (`final-skill.md`, `workflow.md`, `progetti-1-2.md`), `cli-collaboration.png`, `graphify-out/`, and `.claude/` untouched.
+- **GitHub Release `v2.6.0` published as Latest:** Tag `v2.6.0` points to release commit `7a4f8f8` (preceded by atomic commits `62982ed` and `3e9b467` reconciled atop `5954dfd`); release URL `https://github.com/Spe1977/cli-collaboration/releases/tag/v2.6.0` (`isDraft: false`, `isPrerelease: false`). `main` adds only this final release-metadata handoff commit.
+- **GitHub Actions CI green (`45181059385`):** `https://github.com/Spe1977/cli-collaboration/actions/runs/45181059385` passed with conclusion `success` across `shellcheck` (12s), `fixtures (ubuntu-latest)` (14s), and `fixtures (macos-latest)` (29s).
+- **GitHub About & Topics updated:** Description tightened to 248 chars separating `Gemini CLI` and `Antigravity IDE/CLI` and highlighting deterministic guardrails and lifecycle hooks; topics updated (`+antigravity`, `+grok`, `-github-actions`, `-anthropic`, 20/20 total covering all 5 supported runtimes).
 - **Runtime skill homes synced:** User verified `install-skill.sh --all` and `sync-skill.sh --all` across Codex (`~/.codex`), Agents/Gemini CLI (`~/.agents`), Grok (`~/.grok`), Claude Code (`~/.claude`), and Antigravity (`~/.gemini/config`) — all 5 targets `in-sync` with no duplicate `~/.gemini/skills/cli-collaboration`.
-- **Documentation aligned for `v2.6.0`:** Updated `CONTRIBUTORS.md`, `CONTRIBUTORS_IT.md` (restoring Grok Build + updating Antigravity), `CHANGELOG.md`, `README.md`, `README_IT.md` (added CI badge, language/changelog/contributor links, `How It Was Developed`, accurate repo tree, global hook paths), `CLAUDE.md`, and `docs/future-architecture.md`.
 
 ## File ownership
 ### agent-owned
@@ -62,27 +63,33 @@ Reconcile `main` onto `origin/main` (`5954dfd`, `v2.5.0`), update contributors a
 No frozen files currently declared.
 
 ## Files changed this shift
-- `.gitignore`, `brainplan.md`, `docs/superpowers/{plans,specs}/2026-07-20-grok-multicli-compatibility*`: reconciled onto `origin/main` (`5954dfd`) and normalized file permissions.
+- `.gitignore`, `brainplan.md`, `docs/superpowers/{plans,specs}/2026-07-20-grok-multicli-compatibility*`: reconciled onto `origin/main` (`5954dfd`) and normalized file permissions (`0644` non-scripts / `0755` scripts).
 - `CONTRIBUTORS.md`, `CONTRIBUTORS_IT.md`: restored **Grok Build (xAI)** and added **Antigravity (Google DeepMind)** Phase 5 / `v2.6.0` record.
 - `CHANGELOG.md`: restored authentic `[2.5.0] — 2026-07-20` release notes and aligned `[2.6.0]` summary.
 - `README.md`, `README_IT.md`: added CI badge and quick nav links, restored `How It Was Developed` / `Come E Stato Sviluppato`, fixed `Package Structure` tree, removed dangling `workflow.md` mention, and documented global hook paths.
 - `CLAUDE.md`, `docs/future-architecture.md`: aligned `End of Shift` format with `handoff-template.md` and updated `Current Status` to `v2.6.0`.
+- `AGENT_HANDOFF.md`: reconciled ownership/history and recorded verified `v2.6.0` GitHub release, CI, and About metadata.
+- GitHub repository & release: pushed commits `62982ed`, `3e9b467`, `7a4f8f8`, tag `v2.6.0`, Latest release `v2.6.0`, and updated About description + topics.
 
 ## Tests
-- Red: none (reconciliation and documentation/release prep shift).
-- Green: pending final 10-step `bash evals/run-mechanical-checks.sh` run before commits and GitHub Actions CI verification after push.
+- Red: none.
+- Green:
+  - `python3 evals/lint-handoff.py AGENT_HANDOFF.md` (passed, within 16,000-char budget)
+  - `bash evals/run-mechanical-checks.sh` (all 10/10 steps green locally after final handoff edit)
+  - GitHub Actions CI run `45181059385` (`7a4f8f8`): `shellcheck` (`success`), `fixtures (ubuntu-latest)` (`success`), `fixtures (macos-latest)` (`success`)
+  - `gh release view v2.6.0` & `gh repo view Spe1977/cli-collaboration`: verified `v2.6.0` as Latest (`isDraft: false`, `isPrerelease: false`), updated description, and 20 topics including `antigravity` and `grok`
 
 ## Open concerns
-- GitHub Actions `shellcheck`, `fixtures (ubuntu-latest)`, and `fixtures (macos-latest)` must pass on `main` before tagging and publishing `v2.6.0`.
+- `evals/run-live-evals.py` was verified deterministically via `--self-test` and `--dry-run` against a temporary stub CLI; live execution against external installed CLIs (`claude`, `codex`, `gemini`, `agy`, `grok`) remains opt-in locally (`python3 evals/run-live-evals.py --cli <cli> --mode all`).
 - `graphify-out/` predates `v2.5.0`/`v2.6.0` changes and remains untouched locally; `cli-collaboration.png` stays untracked and untouched.
 
 ## Next agent starts from
-**Next agent: Antigravity (current shift continuation).** Run `bash evals/run-mechanical-checks.sh` and `git diff --check`, split changes into clean atomic commits on `main`, push `origin main`, watch GitHub Actions CI until all 3 jobs pass, then tag/publish `v2.6.0`, update GitHub About metadata, and record the final release commit/URLs in `AGENT_HANDOFF.md`.
+**Next agent: task-fit decides.** Release `v2.6.0` is published on GitHub (`v2.6.0` on `7a4f8f8`) with `main` holding only this final release-metadata handoff commit; all five local user runtime homes are synced. Start from the next user request.
 
 Do not touch: `final-skill.md`, `workflow.md`, `progetti-1-2.md` (`user-reserved`), `cli-collaboration.png`, or `graphify-out/`.
 
 ## History
-- 2026-11-23T14:04:39+01:00 - Antigravity: Reconciled `main` index onto `origin/main` (`5954dfd`), normalized permissions, restored `v2.5.0` history/docs, updated `CONTRIBUTORS*.md`, `CHANGELOG.md`, `README*.md`, `CLAUDE.md`, and `docs/future-architecture.md` for `v2.6.0` release prep. (in-progress)
+- 2026-11-23T14:17:47+01:00 - Antigravity: Reconciled `main` onto `origin/main` (`5954dfd`), normalized file modes, updated `CONTRIBUTORS*.md`, `CHANGELOG.md`, `README*.md`, `CLAUDE.md`, and `docs/future-architecture.md`, pushed `62982ed`/`3e9b467`/`7a4f8f8` with green CI (`45181059385`), published `v2.6.0` Latest GitHub Release, updated repo About/topics, and closed handoff. (done)
 - 2026-11-23T13:37:42+01:00 - Antigravity: Expanded deterministic mechanical tests (`test-lint-handoff.sh` 10 cases, `run-tests.sh` 33 cases, `install-rollback-test.sh` 8 checks, `hook-guard-tests.sh` 11 blocks, Markdown link/`+x` integrity check -> 10-step CI) and added opt-in local live eval harness `evals/run-live-evals.py`. (done)
 - 2026-11-23T13:26:52+01:00 - Antigravity: Added first-class Antigravity IDE / App 2.0 / `agy` support, hardened `parse-ownership.py` path/alias normalization, made `lang.sh` sandbox-friendly, moved install backups to `skills-backups/`, and added `hook-guard.py` + `examples/hooks/`. (done)
 - 2026-08-19T18:22:00+02:00 - Gemini CLI: Generated local project knowledge graph via graphify (`graphify-out/`) and verified mechanical + language suites. (done)
