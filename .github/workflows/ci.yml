@@ -20,9 +20,7 @@ jobs:
           sudo apt-get install -y shellcheck
 
       - name: Run shellcheck on all *.sh
-        # SC2254 is excluded: check-ownership.sh deliberately uses dynamic
-        # case patterns ($pattern) as globs — that is the parser's contract,
-        # not a bug.
+        # SC2254 is excluded: check-ownership.sh / legacy fixture compatibility.
         run: |
           set -euo pipefail
           mapfile -t scripts < <(find . -type f -name '*.sh' -not -path './.git/*' | sort)
@@ -56,14 +54,9 @@ jobs:
       - name: Install PyYAML
         run: python3 -m pip install --upgrade pip pyyaml
 
-      - name: Run ownership parser fixtures
-        run: bash skills/cli-collaboration/scripts/test-fixtures/run-tests.sh
-
-      - name: Run install rollback fixture
-        run: bash skills/cli-collaboration/scripts/test-fixtures/install-rollback-test.sh
-
-      - name: Run mechanical eval checks
-        # Mechanical guards only: parser fixtures (rerun), install rollback
-        # (rerun), AGENT_HANDOFF.md structural lint, SKILL.md frontmatter.
-        # Behavioral evaluation of scenarios A-F is out of scope (LLM-judge).
+      - name: Run mechanical eval checks (10 steps)
+        # Mechanical guards only: parser fixtures, install/sync & rollback,
+        # lang.sh tests, cross-CLI portability, hook-guard.py tests & templates,
+        # lint-handoff unit tests, run-live-evals.py --self-test, frontmatter/
+        # YAML/JSON validation, markdown link/+x integrity, and source-guard.
         run: bash evals/run-mechanical-checks.sh

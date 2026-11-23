@@ -30,8 +30,8 @@ allowed = {"name", "description", "metadata"}
 unexpected = sorted(set(data) - allowed)
 if unexpected:
     raise SystemExit(f"unsupported shared frontmatter keys: {unexpected}")
-if data.get("metadata", {}).get("version") != "2.5.0":
-    raise SystemExit("metadata.version must be 2.5.0")
+if data.get("metadata", {}).get("version") != "2.6.0":
+    raise SystemExit("metadata.version must be 2.6.0")
 PY
 
 if grep -q '^# CLI Collaboration (Grok)$' "$SKILL_MD"; then
@@ -46,13 +46,19 @@ if grep -q '\$GROK_SKILL_HOME' "$SKILL_MD"; then
 fi
 grep -q 'references/grok-adapter.md' "$SKILL_MD" || \
   fail "shared SKILL.md does not route to the Grok adapter"
+grep -q 'references/antigravity-adapter.md' "$SKILL_MD" || \
+  fail "shared SKILL.md does not route to the Antigravity adapter"
 
-for doc in \
-  README.md README_IT.md CLAUDE.md GEMINI.md \
-  examples/CLAUDE.md examples/GEMINI.md; do
-  grep -qi 'Grok' "$REPO_ROOT/$doc" || \
-    fail "$doc omits Grok from the supported-agent documentation"
-done
+if [ -f "$REPO_ROOT/README.md" ]; then
+  for doc in \
+    README.md README_IT.md CLAUDE.md GEMINI.md \
+    examples/AGENTS.md examples/CLAUDE.md examples/GEMINI.md; do
+    grep -qi 'Grok' "$REPO_ROOT/$doc" || \
+      fail "$doc omits Grok from the supported-agent documentation"
+    grep -qi 'Antigravity' "$REPO_ROOT/$doc" || \
+      fail "$doc omits Antigravity from the supported-agent documentation"
+  done
+fi
 
 if ! "$CHECK_SH" --handoff "$SCRIPT_DIR/handoff-clean.md" src/app.js; then
   fail "ownership checker no longer defaults to Codex"
@@ -61,28 +67,36 @@ fi
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
-GROK_HANDOFF="$WORK/grok-handoff.md"
-cat > "$GROK_HANDOFF" <<'EOF'
+PORTABILITY_HANDOFF="$WORK/portability-handoff.md"
+cat > "$PORTABILITY_HANDOFF" <<'EOF'
 # AGENT_HANDOFF.md
 
-**Last updated:** 2026-07-20T00:00:00+02:00
-**Last agent:** Grok
+**Last updated:** 2026-11-23T12:00:00+01:00
+**Last agent:** Antigravity
 **Status:** in-progress
 
 ## Current task
-Grok portability fixture.
+Grok and Antigravity portability fixture.
 
 ## File ownership
 ### agent-owned
 - src/grok.txt: Grok — fixture owner
+- src/agy.txt: Antigravity IDE — fixture owner
 ### user-reserved
 No user-reserved files.
 ### frozen
 No frozen files.
 EOF
 
-"$CHECK_SH" --handoff "$GROK_HANDOFF" --agent Grok src/grok.txt || \
+"$CHECK_SH" --handoff "$PORTABILITY_HANDOFF" --agent Grok src/grok.txt || \
   fail "explicit Grok identity rejected a Grok-owned file"
+
+"$CHECK_SH" --handoff "$PORTABILITY_HANDOFF" --agent Antigravity src/agy.txt || \
+  fail "explicit Antigravity identity rejected an Antigravity-owned file"
+
+if "$CHECK_SH" --handoff "$PORTABILITY_HANDOFF" --agent Gemini src/agy.txt >/dev/null 2>&1; then
+  fail "Gemini incorrectly matched Antigravity ownership"
+fi
 
 GROK_HOME="$WORK/grok" \
 CODEX_HOME="$WORK/codex" \
@@ -105,4 +119,4 @@ AGENTS_HOME="$WORK/agents" \
 GEMINI_HOME="$WORK/gemini" \
   "$SYNC_SH" >/dev/null || fail "default sync reported drift after install"
 
-printf 'ok - grok-portability\n'
+printf 'ok - cross-cli-portability\n'

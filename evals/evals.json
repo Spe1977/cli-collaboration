@@ -1,9 +1,9 @@
 {
-  "name": "cli-collaboration-v2.2",
-  "version": "0.1.0",
+  "name": "cli-collaboration-v2.6",
+  "version": "0.2.0",
   "owner": "Codex",
   "status": "mechanical-guards-only",
-  "status_note": "CI verifies mechanical guards (parser fixtures, install rollback, AGENT_HANDOFF.md structural lint, SKILL.md frontmatter). Behavioral evaluation of scenarios A-F requires an LLM-judge harness which is out of scope.",
+  "status_note": "CI verifies mechanical guards across 10 steps: ownership parser fixtures (33 cases including ./ and absolute paths, aliases, parenthetical notes, and malformed lines), install rollback/backup hygiene/dry-run/sync fixtures (8 checks), lang.sh sandbox/env/local fixtures (34 assertions), cross-CLI portability checks (Grok + Antigravity), hook-guard.py deterministic hook checks + template validation (11 blocks), lint-handoff.py unit tests (10 cases) + repo handoffs, opt-in live eval harness self-test (evals/run-live-evals.py --self-test), strict agentskills.io frontmatter + YAML/JSON asset validation, markdown relative link & +x bit integrity checks, and source-guard. Opt-in real LLM behavioral/trigger evaluations run locally via `python3 evals/run-live-evals.py --cli <claude|codex|gemini|agy|grok>`.",
   "exit_code_contract": {
     "check_ownership": {
       "0": "valid ownership and no conflicts detected",
@@ -32,7 +32,7 @@
       "expected_behavior": "stops, names file owner and risk, and asks for reassignment or deferment",
       "negative_assertions": ["overwrites another agent's file", "silently edits user-reserved files"],
       "mechanized": true,
-      "mechanized_by": "skills/cli-collaboration/scripts/test-fixtures/run-tests.sh (agent-conflict, user-reserved, frozen, missing-frozen-section, endash-owner, glob-crosses-slash fixtures)"
+      "mechanized_by": "skills/cli-collaboration/scripts/test-fixtures/run-tests.sh (33 cases) + hook-guard-tests.sh (11 blocks); behavioral variant also testable locally via evals/run-live-evals.py"
     },
     {
       "id": "D",
@@ -54,6 +54,78 @@
       "expected_behavior": "honors the newest user instruction and records supersession in the final handoff",
       "negative_assertions": ["continues obsolete task", "skips handoff update"],
       "mechanized": false
+    }
+  ],
+  "trigger_evals": [
+    {
+      "id": "T1",
+      "should_trigger": true,
+      "prompt": "Continue working on this repo — Codex left uncommitted changes and an AGENT_HANDOFF.md in the root."
+    },
+    {
+      "id": "T2",
+      "should_trigger": true,
+      "prompt": "Check git status; there's a dirty worktree and CLAUDE.md/GEMINI.md side by side. Pick up where the last session stopped."
+    },
+    {
+      "id": "T3",
+      "should_trigger": true,
+      "prompt": "Can Antigravity edit scripts/deploy.sh or is it owned by Codex in the handoff?"
+    },
+    {
+      "id": "T4",
+      "should_trigger": true,
+      "prompt": "We have a red test left from Claude Code's shift yesterday; resume from the failing test and hand off when finished."
+    },
+    {
+      "id": "T5",
+      "should_trigger": true,
+      "prompt": "Initialize a brainstorming.md multi-LLM turn workflow in docs/rfc-ideas/ with Grok Build and Gemini CLI."
+    },
+    {
+      "id": "T6",
+      "should_trigger": true,
+      "prompt": "I'm the only agent on this project, but I need cross-session memory in AGENT_HANDOFF.md so tomorrow's session remembers our decisions."
+    },
+    {
+      "id": "T7",
+      "should_trigger": true,
+      "prompt": "Run /cli-collaboration off for this shift without resetting the uncommitted files."
+    },
+    {
+      "id": "T8",
+      "should_trigger": true,
+      "prompt": "Update AGENT_HANDOFF.md before ending this shift and verify no frozen or user-reserved files were modified."
+    },
+    {
+      "id": "N1",
+      "should_trigger": false,
+      "prompt": "What does git rebase --onto do? Just explain the syntax with a quick example."
+    },
+    {
+      "id": "N2",
+      "should_trigger": false,
+      "prompt": "Write a standalone Python function to parse ISO 8601 timestamps in a scratch script."
+    },
+    {
+      "id": "N3",
+      "should_trigger": false,
+      "prompt": "Search the web for the latest release notes of pytest 8."
+    },
+    {
+      "id": "N4",
+      "should_trigger": false,
+      "prompt": "Fix the typo in this single inline SQL query I pasted below."
+    },
+    {
+      "id": "N5",
+      "should_trigger": false,
+      "prompt": "Convert this JSON snippet to YAML."
+    },
+    {
+      "id": "N6",
+      "should_trigger": false,
+      "prompt": "Create a new React button component in an isolated empty sandbox with no repo handoff."
     }
   ]
 }

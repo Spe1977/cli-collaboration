@@ -146,5 +146,42 @@ if command -v python3 >/dev/null 2>&1; then
 fi
 cleanup_home
 
+# --- Task 8: v2.6.0 sandbox fallback (CLI_COLLAB_LANG, --local, exit 4) ---
+new_home
+WORK_CWD="$(mktemp -d)"
+out="$(cd "$WORK_CWD" && CLI_COLLAB_LANG=italian "$LANG_SH" get)"; rc=$?
+assert_exit "get-env-fallback-exit0" 0 "$rc"
+assert_eq   "get-env-fallback-it" "it" "$out"
+
+(cd "$WORK_CWD" && "$LANG_SH" set fr --local --by Antigravity >/dev/null); rc=$?
+assert_exit "set-local-exit0" 0 "$rc"
+out="$(cd "$WORK_CWD" && "$LANG_SH" get)"; rc=$?
+assert_exit "get-local-exit0" 0 "$rc"
+assert_eq   "get-local-fr" "fr" "$out"
+
+"$LANG_SH" set it >/dev/null
+out="$(cd "$WORK_CWD" && "$LANG_SH" get)"
+assert_eq "global-overrides-local" "it" "$out"
+rm -rf "$WORK_CWD"
+cleanup_home
+
+# Read-only / non-directory XDG_CONFIG_HOME triggers clean exit 4 on set
+SANDBOX_WORK="$(mktemp -d)"
+touch "$SANDBOX_WORK/notadir"
+set +e
+XDG_CONFIG_HOME="$SANDBOX_WORK/notadir" "$LANG_SH" set it --by Antigravity >/dev/null 2>/dev/null
+rc=$?
+set -e
+assert_exit "sandbox-readonly-exit4" 4 "$rc"
+out="$(XDG_CONFIG_HOME="$SANDBOX_WORK/notadir" CLI_COLLAB_LANG=en "$LANG_SH" get)"; rc=$?
+assert_exit "sandbox-get-env-fallback-exit0" 0 "$rc"
+assert_eq   "sandbox-get-env-fallback-en" "en" "$out"
+set +e
+XDG_CONFIG_HOME="$SANDBOX_WORK/notadir" "$LANG_SH" get >/dev/null 2>/dev/null
+rc=$?
+set -e
+assert_exit "sandbox-get-unset-exit3" 3 "$rc"
+rm -rf "$SANDBOX_WORK"
+
 if [ "$failures" -ne 0 ]; then exit 1; fi
 echo "# all lang.sh tests passed"

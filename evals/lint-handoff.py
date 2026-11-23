@@ -5,11 +5,16 @@ Mechanical guards only. This does NOT evaluate semantic correctness of the
 handoff content; it only verifies the structural invariants that the project
 contract relies on:
 
-  1. Required top-level headings are present.
-  2. Every timestamp in `## History` is ISO 8601 parseable.
-  3. The `## Next agent starts from` section has non-trivial content.
-  4. The `## File ownership` block contains the three required subsections
+  1. Header metadata (`Last updated`, `Last agent`, `Status`) is valid.
+  2. Required top-level headings are present.
+  3. Every timestamp in `## History` is ISO 8601 parseable.
+  4. `## Open concerns` is non-empty and not a trivial "all good" placeholder.
+  5. `## Next agent starts from` has non-trivial content.
+  6. `## File ownership` contains the three required subsections
      (agent-owned, user-reserved, frozen).
+
+Also prints a soft warning (non-failing) when the file exceeds 16,000 chars
+(~4,000 tokens, Threshold 2 in docs/future-architecture.md).
 
 Exit codes:
   0  all checks passed
@@ -29,6 +34,7 @@ REQUIRED_TOP_HEADINGS = [
     "## File ownership",
     "## Files changed this shift",
     "## Tests",
+    "## Open concerns",
     "## Next agent starts from",
     "## History",
 ]
@@ -39,12 +45,34 @@ REQUIRED_OWNERSHIP_SUBHEADINGS = [
     "### frozen",
 ]
 
+VALID_STATUSES = {"bootstrap", "in-progress", "done", "blocked", "paused"}
+
+BANNED_CONCERN_PLACEHOLDERS = {
+    "",
+    "all good",
+    "all good.",
+    "none",
+    "none.",
+    "n/a",
+    "nothing",
+    "no concerns",
+    "no open concerns",
+    "tbd",
+    "todo",
+}
+
+SOFT_CHAR_BUDGET = 16000
+
 # Matches the leading "YYYY-MM-DDTHH:MM[:SS][±HH:MM|Z]" portion of a History
 # entry. We accept entries without seconds (the project mixes both forms) and
 # entries without an explicit offset (interpreted as local time when parsed).
 TIMESTAMP_RE = re.compile(
     r"^- (?P<ts>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:?\d{2})?)\b"
 )
+
+HEADER_UPDATED_RE = re.compile(r"^\*\*Last updated:\*\*\s*(?P<val>.+?)\s*$")
+HEADER_AGENT_RE = re.compile(r"^\*\*Last agent:\*\*\s*(?P<val>.+?)\s*$")
+HEADER_STATUS_RE = re.compile(r"^\*\*Status:\*\*\s*(?P<val>.+?)\s*$")
 
 # Sentinel placeholders that would make `## Next agent starts from` trivial.
 TRIVIAL_NEXT_AGENT_TOKENS = {"", "tbd", "todo", "n/a", "none"}
@@ -80,6 +108,58 @@ def _section(content: str, heading: str) -> str | None:
     return "\n".join(lines[start:end])
 
 
+def _parse_iso_with_tz(ts: str) -> _dt.datetime | None:
+    normalized = ts.replace("Z", "+00:00") if ts.endswith("Z") else ts
+    try:
+        parsed = _dt.datetime.fromisoformat(normalized)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return None
+    return parsed
+
+
+def check_header_metadata(content: str) -> list[str]:
+    errors: list[str] = []
+    updated: str | None = None
+    agent: str | None = None
+    status: str | None = None
+
+    for line in content.splitlines()[:25]:
+        s = line.strip()
+        if updated is None:
+            m = HEADER_UPDATED_RE.match(s)
+            if m:
+                updated = m.group("val")
+        if agent is None:
+            m = HEADER_AGENT_RE.match(s)
+            if m:
+                agent = m.group("val")
+        if status is None:
+            m = HEADER_STATUS_RE.match(s)
+            if m:
+                status = m.group("val")
+
+    if not updated:
+        errors.append("missing `**Last updated:**` header")
+    elif _parse_iso_with_tz(updated) is None:
+        errors.append(
+            f"`**Last updated:**` must be ISO 8601 with timezone offset (got {updated!r})"
+        )
+
+    if not agent:
+        errors.append("missing or empty `**Last agent:**` header")
+
+    if not status:
+        errors.append("missing `**Status:**` header")
+    elif status.lower() not in VALID_STATUSES:
+        errors.append(
+            f"invalid `**Status:**` {status!r}; expected one of {sorted(VALID_STATUSES)}"
+        )
+
+    return errors
+
+
 def check_required_headings(content: str) -> list[str]:
     missing = []
     for heading in REQUIRED_TOP_HEADINGS:
@@ -99,6 +179,27 @@ def check_ownership_subsections(content: str) -> list[str]:
     ]
 
 
+def check_open_concerns(content: str) -> list[str]:
+    body = _section(content, "## Open concerns")
+    if body is None:
+        return []  # already reported by required-headings
+    stripped = body.strip()
+    if not stripped:
+        return ["`## Open concerns` section is empty"]
+    normalized_lines = [
+        ln.lstrip("-* \t").strip().lower()
+        for ln in stripped.splitlines()
+        if ln.strip()
+    ]
+    if not normalized_lines or all(
+        ln in BANNED_CONCERN_PLACEHOLDERS for ln in normalized_lines
+    ):
+        return [
+            "`## Open concerns` contains only a trivial placeholder (never write 'all good' or 'none')"
+        ]
+    return []
+
+
 def check_history_timestamps(content: str) -> list[str]:
     body = _section(content, "## History")
     if body is None:
@@ -114,8 +215,6 @@ def check_history_timestamps(content: str) -> list[str]:
             errors.append(f"history entry without parseable leading timestamp: {ln[:80]}")
             continue
         ts = m.group("ts")
-        # datetime.fromisoformat in Python 3.11+ handles trailing `Z` natively;
-        # older versions don't. Normalize for safety.
         normalized = ts.replace("Z", "+00:00") if ts.endswith("Z") else ts
         try:
             _dt.datetime.fromisoformat(normalized)
@@ -131,9 +230,6 @@ def check_next_agent_nontrivial(content: str) -> list[str]:
     stripped = body.strip()
     if not stripped:
         return ["`## Next agent starts from` section is empty"]
-    # A non-trivial section has at least one alphabetic character beyond the
-    # known placeholder tokens and is at least 40 characters long after
-    # collapsing whitespace.
     collapsed = " ".join(stripped.split())
     if collapsed.lower() in TRIVIAL_NEXT_AGENT_TOKENS:
         return [f"`## Next agent starts from` is a trivial placeholder ({collapsed!r})"]
@@ -146,8 +242,10 @@ def check_next_agent_nontrivial(content: str) -> list[str]:
 
 
 CHECKS = (
+    ("header-metadata", check_header_metadata),
     ("required-headings", check_required_headings),
     ("ownership-subsections", check_ownership_subsections),
+    ("open-concerns", check_open_concerns),
     ("history-timestamps", check_history_timestamps),
     ("next-agent-nontrivial", check_next_agent_nontrivial),
 )
@@ -169,6 +267,13 @@ def main(argv: list[str]) -> int:
         return 2
 
     content = _read(path)
+
+    if len(content) > SOFT_CHAR_BUDGET:
+        print(
+            f"WARN [size-budget] {path} is {len(content)} chars "
+            f"(>{SOFT_CHAR_BUDGET}; consider compacting ## History)",
+            file=sys.stderr,
+        )
 
     all_errors: list[str] = []
     for name, fn in CHECKS:
