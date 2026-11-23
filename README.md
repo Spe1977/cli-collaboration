@@ -1,76 +1,66 @@
 # cli-collaboration
 
-**Version:** 2.5.0 (see [`CHANGELOG.md`](CHANGELOG.md)).
+[![CI](https://github.com/Spe1977/cli-collaboration/actions/workflows/ci.yml/badge.svg)](https://github.com/Spe1977/cli-collaboration/actions/workflows/ci.yml)
 
-`cli-collaboration` is a lightweight protocol for coordinating Codex, Claude Code, Gemini CLI, Grok Build, or one agent across multiple sessions in the same project.
+**Version:** 2.6.0 | [Italiano](README_IT.md) | [Changelog](CHANGELOG.md) | [Contributors](CONTRIBUTORS.md)
 
-The source of truth is `AGENT_HANDOFF.md`. Scripts are guardrails: they report drift, malformed ownership, and likely conflicts, but they do not replace agent judgment.
+`cli-collaboration` is a lightweight protocol and deterministic guardrail toolkit for coordinating **Codex**, **Claude Code**, **Gemini CLI**, **Grok Build**, **Antigravity (IDE / App 2.0 / `agy` CLI)**, or a single agent across multiple sessions in the same project.
+
+The source of truth is `AGENT_HANDOFF.md`. Scripts and optional lifecycle hooks are guardrails: they prevent destructive shortcuts, detect ownership conflicts, and validate handoff structure without replacing agent judgment.
 
 ## What It Solves
 
 - Preserves user and agent work in dirty worktrees.
-- Supports the single-agent case: the handoff is project memory between sessions.
-- Gives multiple CLI agents explicit file ownership and stop conditions.
-- Prevents destructive cleanup from becoming the default response to uncertainty.
-- Makes collaboration auditable: each agent reads the handoff first and updates it last.
+- Supports the single-agent case: the handoff is persistent project memory across sessions.
+- Gives multiple CLI and IDE agents explicit file ownership, distinct identities (`Antigravity` vs `Gemini`), and clear stop conditions.
+- Prevents destructive git cleanup (`reset --hard`, `clean`, unauthorized `stash`, `restore`, `checkout --`) from becoming a default shortcut.
+- Offers optional deterministic lifecycle hooks (`SessionStart`, `PreToolUse`/`BeforeTool`, `Stop`) alongside prompt-driven progressive disclosure.
+- Makes collaboration auditable: each agent reads `AGENT_HANDOFF.md` first and updates it last.
 
 ## Workflow Summary
 
-The final workflow was shaped by the discussion in `workflow.md`.
+The recommended workflow is handoff-first:
 
-The shared conclusion is option C: the first agent should be chosen by task fit, not by a rigid rule about native skill loading. Codex is the natural first agent for scaffolding, scripts, tests, packaging, and release gates. Claude is the natural first agent for semantic protocol work, policy, templates, and reference writing. Gemini can bootstrap inert scaffolding or perform QA/red-team work. Grok is a natural fit for Grok-native execution and immutable-host QA. Every agent must create or respect `AGENT_HANDOFF.md` immediately.
+1. The active agent reads `AGENT_HANDOFF.md` (or bootstraps it conservatively if missing).
+2. It declares the **Start Gate**: handoff read, current task, explicit files to touch, expected red test, reserved zones confirmed, and stop condition.
+3. Work is scoped by ownership (`### agent-owned`, `### user-reserved`, `### frozen`) and task fit.
+4. Only one parent/coordinator session updates `AGENT_HANDOFF.md` last (parallel subagents and Antigravity swarms report back instead of mutating it concurrently).
+5. Every handoff records files changed, tests red/green, concrete open concerns, and the next concrete step.
 
-The recommended multi-LLM flow is handoff-first:
-
-1. The first agent reads or creates `AGENT_HANDOFF.md`.
-2. It declares the start gate: handoff read, current task, files to touch, expected red test, reserved zones, and stop condition.
-3. Work is assigned by ownership and competence.
-4. Each agent edits only its declared files.
-5. Every handoff records files changed, tests red/green, open concerns, and the next concrete step.
-
-The single-LLM case is first-class. Even when only one CLI is installed, `AGENT_HANDOFF.md` is still project memory between sessions, so the agent can resume from the last checkpoint instead of rediscovering state from scratch.
+The single-LLM case is first-class: even when only one agent works in a repository, `AGENT_HANDOFF.md` preserves context across restarts.
 
 ## Activation And Pause
 
-The skill is designed to be effectively always available when collaboration state exists, but the exact trigger differs by CLI:
+All supported runtimes treat the presence of `AGENT_HANDOFF.md`, `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, a dirty worktree, `brainstorming.md`, or a resume request as a trigger:
 
-- Codex loads the skill through its skill metadata and `AGENTS.md` project guidance.
-- Claude loads the skill through `SKILL.md` description matching, `CLAUDE.md`, and optional SessionStart hooks.
-- Gemini loads the skill through `activate_skill`, `GEMINI.md`, or the Gemini adapter flow.
-- Grok discovers `SKILL.md` from its skill directories and exposes the installed skill as `/cli-collaboration`.
-- All CLIs should treat the presence of `AGENT_HANDOFF.md`, `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, a dirty worktree, or a resume request as a trigger to apply the protocol.
+- **Codex:** loads the skill via `SKILL.md` frontmatter and `AGENTS.md`.
+- **Claude Code:** loads via `SKILL.md` description matching, `/cli-collaboration`, `CLAUDE.md`, and optional `SessionStart` / `PreToolUse` hooks.
+- **Gemini CLI:** discovers `SKILL.md` natively (prefer `~/.agents/skills/` over `~/.gemini/skills/` to avoid duplicate warnings), activates via `activate_skill`, `GEMINI.md`, and optional `SessionStart` / `BeforeTool` hooks.
+- **Grok Build:** discovers `~/.grok/skills/` (or `.grok/skills/`), `/cli-collaboration`, and `AGENTS.md` (see `references/grok-adapter.md`).
+- **Antigravity (IDE / App 2.0 / `agy` CLI):** discovers `~/.gemini/config/skills/` and workspace `.agents/skills/`, loads both `AGENTS.md` and `GEMINI.md` automatically, keeps `AGENT_HANDOFF.md` at the repo root across Plan/Execute turns, and supports `hooks.json` (`SessionStart`, `PreToolUse`, `Stop`) (see `references/antigravity-adapter.md`).
 
-Gemini activation can require an explicit prompt. When activation does not fire, copy the forced-activation prompt from `skills/cli-collaboration/references/gemini-adapter.md` into the session opener.
-
-Grok exposes the skill as `/cli-collaboration`; slash-command behavior differs across runtimes. The portable cross-CLI pause mechanism is filesystem-based:
+The portable cross-CLI pause mechanism is filesystem-based:
 
 - `.cli-collaboration-off` in the project root.
 - `**Status:** paused` in `AGENT_HANDOFF.md`.
 
-Pause only reduces procedural overhead. It never authorizes destructive cleanup, overwriting someone else's work, or ignoring `user-reserved` and `frozen` ownership.
+Pause only reduces procedural overhead (Start Gate / End-of-Shift verbosity). It **never** authorizes destructive cleanup, overwriting someone else's work, or bypassing `### user-reserved` and `### frozen` ownership.
 
 ## Non-Code Workflows
 
-The primary use case remains repository collaboration. The same handoff protocol can also coordinate explicit non-code workflows, such as multi-LLM brainstorming, research synthesis, structured debate, editorial review, or model comparison.
+The primary use case remains repository collaboration. The same handoff protocol also coordinates explicit non-code workflows such as multi-LLM brainstorming, research synthesis, structured debate, editorial review, or model comparison.
 
-For multi-LLM brainstorming, start a topic folder with only `brainstorming.md`. The first agent reads that seed file, creates `AGENT_HANDOFF.md`, writes the first turn, and updates the handoff. See `skills/cli-collaboration/references/alternate-workflows.md`.
+For multi-LLM brainstorming, start a topic folder with `brainstorming.md`. The first agent reads that seed file, bootstraps `AGENT_HANDOFF.md`, writes the first turn, and updates the handoff last. See `skills/cli-collaboration/references/alternate-workflows.md`.
 
 ## How It Was Developed
 
-The package was intentionally built by dogfooding the protocol it provides.
+This package was built by dogfooding the `cli-collaboration` protocol itself across five phases (see [`CONTRIBUTORS.md`](CONTRIBUTORS.md)):
 
-- Phase 1, Codex: implemented the core skill, scripts, fixtures, OpenAI metadata, Codex adapter, `README.md`, and technical eval wiring.
-- Phase 2, Claude: implemented semantic references, handoff template, anti-patterns, validation scenarios, Claude adapter, Claude metadata, and examples.
-- Phase 3, Gemini: implemented Gemini guidance and adapter content, then performed cross-CLI QA.
-- Phase 4, Grok: contributed the initial Grok adapter, metadata, discovery research, and Bluefin-specific compatibility notes.
-- Final Codex verification: converted the initial Grok-specific port into one portable four-CLI package, added regression coverage, and re-ran the release gates.
-
-The division followed the final C-emendata decision:
-
-- Codex owns package/tooling and final release gates.
-- Claude owns semantic clarity and reference policy.
-- Gemini owns Gemini-specific guidance and QA/red-team review.
-- Grok owns Grok-specific adapter guidance, metadata, and runtime QA.
+- **Phase 1 — Codex (OpenAI):** core `SKILL.md`, guardrail scripts, fixture suite, OpenAI metadata, Codex adapter, `README.md`/`README_IT.md`, and `v2.5.0` portability hardening.
+- **Phase 2 — Claude Code (Anthropic):** semantic references, templates, anti-patterns, validation scenarios, examples, `docs/future-architecture.md`, and `v2.3.0` CI/rollback/lint transition.
+- **Phase 3 — Gemini CLI (Google):** Gemini guidance and adapter, cross-CLI QA verification, and `v2.4.0` alignment.
+- **Phase 4 — Grok Build (xAI):** Grok adapter, metadata, discovery research, and immutable-host runtime notes.
+- **Phase 5 — Antigravity (Google DeepMind):** `v2.6.0` Antigravity IDE / App 2.0 / `agy` CLI integration, `Antigravity` vs `Gemini` parser hardening, sandbox-friendly `lang.sh`, out-of-tree backups (`skills-backups/`), deterministic lifecycle hooks (`hook-guard.py`), 10-step mechanical CI, and opt-in local live eval harness (`evals/run-live-evals.py`).
 
 ## Package Structure
 
@@ -79,39 +69,62 @@ cli-collaboration/
 ├── README.md
 ├── README_IT.md
 ├── LICENSE
+├── CHANGELOG.md
+├── CONTRIBUTORS.md
+├── CONTRIBUTORS_IT.md
 ├── AGENT_HANDOFF.md
+├── CLAUDE.md
+├── GEMINI.md
+├── .github/workflows/ci.yml
 ├── docs/
-│   └── future-architecture.md
+│   ├── future-architecture.md
+│   └── superpowers/
 ├── evals/
-│   └── evals.json
+│   ├── evals.json
+│   ├── lint-handoff.py
+│   ├── run-live-evals.py
+│   ├── run-mechanical-checks.sh
+│   └── test-lint-handoff.sh
 ├── examples/
 │   ├── AGENT_HANDOFF.md
 │   ├── AGENTS.md
 │   ├── CLAUDE.md
-│   └── GEMINI.md
+│   ├── GEMINI.md
+│   └── hooks/
+│       ├── antigravity.hooks.json
+│       ├── claude.settings.json
+│       └── gemini.settings.json
 └── skills/
     └── cli-collaboration/
         ├── SKILL.md
         ├── agents/
-        │   ├── openai.yaml
+        │   ├── antigravity.yaml
         │   ├── claude.yaml
-        │   └── grok.yaml
+        │   ├── grok.yaml
+        │   └── openai.yaml
         ├── references/
         │   ├── alternate-workflows.md
-        │   ├── codex-adapter.md
+        │   ├── antigravity-adapter.md
         │   ├── claude-adapter.md
+        │   ├── codex-adapter.md
         │   ├── gemini-adapter.md
         │   ├── grok-adapter.md
-        │   ├── handoff-template.md
         │   ├── handoff-anti-patterns.md
+        │   ├── handoff-template.md
         │   └── validation-scenarios.md
         └── scripts/
-            ├── install-skill.sh
-            ├── sync-skill.sh
             ├── check-ownership.sh
+            ├── hook-guard.py
+            ├── install-skill.sh
+            ├── lang.sh
             ├── parse-ownership.py
+            ├── sync-skill.sh
             └── test-fixtures/
-                └── grok-portability-tests.sh
+                ├── grok-portability-tests.sh
+                ├── hook-guard-tests.sh
+                ├── install-rollback-test.sh
+                ├── lang-tests.sh
+                └── run-tests.sh
 ```
 
 ## Core Protocol
@@ -129,191 +142,117 @@ Reserved zones confirmed: <user-reserved/frozen areas>
 Stop condition: <task-complete | context-budget | blocker>
 ```
 
-Ownership lines use this exact shape:
+Ownership lines use this exact shape under `## File ownership`:
 
 ```text
 - <path-or-glob>: <agent-name> — <reason>
 ```
 
-The three ownership classes are:
+Required ownership subsections (all three headings must exist even when empty):
 
-- `agent-owned`: a named agent owns the file or glob.
-- `user-reserved`: the user owns the file; stop before editing.
-- `frozen`: the file is protected; stop before editing.
+- `### agent-owned`: files assigned to `Codex`, `Claude`, `Gemini`, `Grok`, `Antigravity`, or another named agent.
+- `### user-reserved`: user-owned files; stop before editing.
+- `### frozen`: protected files; stop before editing.
 
-All three ownership headings must be present in `AGENT_HANDOFF.md`, even when a section is empty. The canonical ownership separator is an em-dash (`—`); the checker tolerates common dash variants but generated handoffs should use the canonical form. Ownership patterns are bash `case` patterns: `*` matches any sequence of characters including `/`, so `scripts/*` covers both `scripts/foo.sh` and `scripts/sub/foo.sh`; use explicit path segments when you need to scope to a single directory level. `**` is not a recognized token.
-
-Concurrency: `AGENT_HANDOFF.md` has one active writer at a time in v2.2. Locking infrastructure is deferred to v3 and gated on a documented concurrent-write incident logged in the handoff history (see `docs/future-architecture.md`).
-
-Destructive operations are explicitly banned unless the user asks for them:
-
-- `git reset --hard`
-- `git clean`
-- unauthorized `git stash`
-- `git restore`
-- `git checkout --`
-- lateral overwrite of files whose owner is unclear or contested
+In v2.6.0+, `parse-ownership.py` keeps `Antigravity` (`antigravity`) and `Gemini` (`gemini`) strictly distinct, normalizes common aliases (`Claude Code`, `Gemini CLI`, `OpenAI Codex`, `Grok Build`, `Antigravity IDE`, `agy`) and parenthetical notes (`Claude (pending Phase 2)`), strips `./` prefixes, and relativizes absolute paths inside the handoff directory. Glob matching uses `fnmatch.fnmatchcase` where `*` crosses `/` (`scripts/*` matches `scripts/sub/foo.sh`); `**` is not recognized.
 
 ## Supported Platforms
 
-The guardrail scripts (`check-ownership.sh`, `install-skill.sh`, `sync-skill.sh`) and the test fixtures target Bash on Linux and macOS (the scripts rely on Bash features such as `mapfile` and `[[ ... ]]` and are not strictly POSIX `sh`). `check-ownership.sh` delegates the ownership parsing to a Python 3 helper (`parse-ownership.py`); Python 3 is therefore a runtime dependency of the ownership check (it was already a dependency of `evals/run-mechanical-checks.sh`). CI exercises both `ubuntu-latest` and `macos-latest` via GitHub Actions (`.github/workflows/ci.yml`). The Grok default target stays under the mutable user home, so it is compatible with immutable Bluefin/Silverblue hosts. Native Windows is not supported; WSL is not part of the test matrix and is not guaranteed to work.
+Guardrail scripts (`check-ownership.sh`, `install-skill.sh`, `sync-skill.sh`, `lang.sh`) and Python helpers (`parse-ownership.py`, `hook-guard.py`) target **Bash (3.2+) and Python 3 on Linux and macOS** (also compatible with immutable Linux user-home hosts like Bluefin/Silverblue). CI runs `shellcheck` on `ubuntu-latest` and the 10-step verification matrix on `ubuntu-latest` and `macos-latest`. Native Windows is not supported.
 
-## Install
+## Install And Sync
 
-Preview the default install targets:
+Preview default install targets (`--codex`, `--agents`, `--grok`):
 
 ```bash
 skills/cli-collaboration/scripts/install-skill.sh --dry-run
 ```
 
-Install to the default Codex, interoperable Agents, and Grok skill directories:
+Install all non-colliding runtimes (**Codex**, **Agents** [also discovered by Gemini CLI], **Grok**, **Claude Code**, and **Antigravity**):
 
 ```bash
-skills/cli-collaboration/scripts/install-skill.sh
+skills/cli-collaboration/scripts/install-skill.sh --all
 ```
 
-Gemini CLI discovers `~/.agents/skills/` as an alias of
-`~/.gemini/skills/`, with the Agents alias taking precedence. The default
-install therefore covers Gemini through the Agents target and deliberately
-does not duplicate the skill in both directories.
-
-Install to an explicit target:
+Or target specific runtimes individually (`--codex`, `--agents`, `--grok`, `--claude`, `--antigravity`, `--gemini`, or `--target DIR`):
 
 ```bash
-skills/cli-collaboration/scripts/install-skill.sh --target "$HOME/.codex/skills/cli-collaboration"
+skills/cli-collaboration/scripts/install-skill.sh --antigravity
+skills/cli-collaboration/scripts/install-skill.sh --claude
 ```
 
-For Claude Code:
+> **Note:** `--all` intentionally omits `~/.gemini/skills/cli-collaboration` because Gemini CLI already discovers `~/.agents/skills/cli-collaboration`, and having both causes duplicate-skill errors. Divergent pre-existing installations are backed up into a sibling `../skills-backups/` folder (outside `skills/`) and automatically rolled back if copying fails.
+
+Check drift or synchronize installed copies:
 
 ```bash
-skills/cli-collaboration/scripts/install-skill.sh --target "$HOME/.claude/skills/cli-collaboration"
-```
-
-For a Gemini-only installation that should not use the interoperable Agents
-target:
-
-```bash
-skills/cli-collaboration/scripts/install-skill.sh --target "$HOME/.gemini/skills/cli-collaboration"
-```
-
-For Antigravity CLI installations using the Gemini configuration-tree layout:
-
-```bash
-skills/cli-collaboration/scripts/install-skill.sh --target "$HOME/.gemini/config/skills/cli-collaboration"
-```
-
-For Grok Build:
-
-```bash
-skills/cli-collaboration/scripts/install-skill.sh --target "${GROK_HOME:-$HOME/.grok}/skills/cli-collaboration"
+skills/cli-collaboration/scripts/sync-skill.sh --all
+skills/cli-collaboration/scripts/sync-skill.sh --all --install
 ```
 
 ## Check Ownership
 
-Use the checker before touching files named in `AGENT_HANDOFF.md`:
+Run before touching files near ownership boundaries:
 
 ```bash
-skills/cli-collaboration/scripts/check-ownership.sh --agent Codex README.md
+skills/cli-collaboration/scripts/check-ownership.sh --agent Antigravity README.md
 ```
 
 Exit codes:
 
-- `0`: ownership structure is valid and no conflict was detected.
+- `0`: ownership structure valid and no conflict detected.
 - `1`: conflict with `agent-owned`, `user-reserved`, or `frozen`.
-- `2`: usage error, malformed ownership section, or missing required subsection (`### agent-owned`, `### user-reserved`, and `### frozen` must all be present even when empty).
+- `2`: usage error, missing handoff, or malformed ownership section.
 
-Examples:
+## Deterministic Hooks (Optional)
+
+`skills/cli-collaboration/scripts/hook-guard.py` enforces the protocol programmatically across Antigravity, Claude Code, and Gemini CLI using ready-to-copy templates under `examples/hooks/`:
+
+- **Antigravity:** `examples/hooks/antigravity.hooks.json` -> `.agents/hooks.json` or `~/.gemini/config/hooks.json` (`SessionStart`, `PreToolUse`, `Stop`).
+- **Claude Code:** `examples/hooks/claude.settings.json` -> `.claude/settings.json` or `~/.claude/settings.json` (`SessionStart`, `PreToolUse`).
+- **Gemini CLI:** `examples/hooks/gemini.settings.json` -> `.gemini/settings.json` or `~/.gemini/settings.json` (`SessionStart`, `BeforeTool`).
+
+When `AGENT_HANDOFF.md` exists, the hook injects a compact session summary, denies edits to files owned by other agents / `user-reserved` / `frozen`, prompts before destructive git commands (`reset --hard`, `clean`, `checkout --`, non-staged `restore`, mutating `stash`), and validates modified handoffs on Antigravity `Stop`.
+
+## Sandbox-Friendly Language Preference
+
+`scripts/lang.sh` checks, in order:
+
+1. Global config `${CLI_COLLAB_CONFIG_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/cli-collaboration/config.json}`
+2. Project-local config `${CLI_COLLAB_LOCAL_CONFIG:-.cli-collaboration.json}` (via `lang.sh set <lang> --local`)
+3. Environment variable `$CLI_COLLAB_LANG`
+
+If `lang.sh set` runs inside a sandbox where `$HOME/.config` is read-only, it exits cleanly with code `4` instead of forcing elevated permissions; agents continue in the user's prompt language.
+
+## Validation And Release Verification
+
+Six behavioral scenarios (`A`–`F`) plus 14 trigger eval cases (`T1`–`T8`, `N1`–`N6`) are documented in `skills/cli-collaboration/references/validation-scenarios.md` and `evals/evals.json`. Mechanical checks run as a 10-step driver (`bash evals/run-mechanical-checks.sh`):
+
+| Step | Gate | Target |
+|---|---|---|
+| 1/10 | Ownership parser fixtures (33 cases) | `skills/cli-collaboration/scripts/test-fixtures/run-tests.sh` |
+| 2/10 | Install rollback, `skills-backups/`, dry-run & sync (8 checks) | `skills/cli-collaboration/scripts/test-fixtures/install-rollback-test.sh` |
+| 3/10 | Language preference & sandbox fallback (34 assertions) | `skills/cli-collaboration/scripts/test-fixtures/lang-tests.sh` |
+| 4/10 | Cross-CLI portability (Grok + Antigravity) | `skills/cli-collaboration/scripts/test-fixtures/grok-portability-tests.sh` |
+| 5/10 | Deterministic hook guard & template fixtures (11 blocks) | `skills/cli-collaboration/scripts/test-fixtures/hook-guard-tests.sh` |
+| 6/10 | `lint-handoff.py` unit tests (10 cases) + repo handoff lint | `evals/test-lint-handoff.sh` & `evals/lint-handoff.py` |
+| 7/10 | Opt-in live eval harness deterministic self-test | `python3 evals/run-live-evals.py --self-test` |
+| 8/10 | Strict `SKILL.md` frontmatter + YAML/JSON assets | Inline Python validator (`PyYAML` + `json`) |
+| 9/10 | Markdown relative links & script `+x` integrity | Inline Python check across `SKILL.md`, `references/`, `scripts/` |
+| 10/10 | `check-ownership.sh` multibyte source-guard | Inline Python byte check |
+
+### Opt-In Live Agent Evaluation (Local)
+
+To test real installed CLI/IDE agents against isolated temporary git sandboxes for Scenarios `A`–`F` and the 14 `trigger_evals` (not run in CI):
 
 ```bash
-# Validate a Codex-owned file.
-skills/cli-collaboration/scripts/check-ownership.sh --handoff AGENT_HANDOFF.md --agent Codex README.md
-
-# Detect a user-reserved conflict.
-skills/cli-collaboration/scripts/check-ownership.sh --handoff AGENT_HANDOFF.md --agent Codex workflow.md
-
-# Validate a Codex-owned single-level glob target.
-skills/cli-collaboration/scripts/check-ownership.sh --handoff AGENT_HANDOFF.md --agent Codex skills/cli-collaboration/scripts/install-skill.sh
+python3 evals/run-live-evals.py --cli agy --mode all --dry-run
+python3 evals/run-live-evals.py --cli <claude|codex|gemini|agy|grok> --mode all --json-out /tmp/eval-report.json
 ```
-
-## Sync
-
-Report drift against install targets:
-
-```bash
-skills/cli-collaboration/scripts/sync-skill.sh
-```
-
-Apply updates after reviewing drift:
-
-```bash
-skills/cli-collaboration/scripts/sync-skill.sh --install
-```
-
-The sync command is read-only by default and reports all missing or drifted targets before exiting.
-
-## Validation Scenarios
-
-The eval design has six scenarios, defined semantically in `skills/cli-collaboration/references/validation-scenarios.md` and wired in `evals/evals.json`.
-
-- A: dirty worktree without handoff.
-- B: existing plan but more specific handoff.
-- C: ownership conflict.
-- D: low context budget.
-- E: vague handoff.
-- F: user supersession.
-
-Scenarios A-E include destructive-cleanup negative assertions wherever a dirty worktree, unfamiliar state, or ownership conflict could tempt cleanup as a shortcut. Scenario F focuses on user supersession and handoff continuity.
-
-Fixture coverage in `run-tests.sh` is broader than the scenario count: it also includes parser-level cases (required-subsection enforcement and dash variant normalization) that test the checker contract independently of scenarios A-F.
 
 ## Updating And Maintenance
 
-Future changes should preserve the same ownership model used to build the skill:
-
-- Codex owns package/tooling files, install/sync/check scripts, metadata, release gates, `.gitignore`, `README.md`, and `evals/evals.json`.
-- Claude owns semantic references, handoff template, anti-patterns, validation scenario prose, Claude adapter, and future-architecture policy.
-- Gemini owns Gemini adapter/example content and QA/red-team review.
-- Grok owns Grok adapter/metadata content and Grok runtime QA.
-
-When changing eval behavior, update `skills/cli-collaboration/references/validation-scenarios.md` first, then mirror the technical wiring in `evals/evals.json`.
-
-When changing script behavior, update `skills/cli-collaboration/references/codex-adapter.md` and rerun the fixture suite.
-
-Potential v3 infrastructure, such as sidecar state files or locks, should only be promoted through the thresholds in `docs/future-architecture.md`.
-
-When initializing this package as a Git repository, create `.gitignore` before the first commit. The default ignore list excludes `.handoff-backups/` so optional handoff snapshots do not add noise to diffs.
-
-## Release-Time Verification
-
-The package has passed these local verification gates. Most commands are directly reproducible from this repository; the skill package validation command requires the Codex `skill-creator` harness.
-
-| Gate | Command | Result |
-|---|---|---|
-| Skill package validation | `python3 <skill-creator>/scripts/quick_validate.py skills/cli-collaboration` | pass |
-| Bash syntax | `bash -n` on all scripts | pass |
-| Ownership fixtures | `skills/cli-collaboration/scripts/test-fixtures/run-tests.sh` | pass, 8/8 |
-| JSON validity | `python3 -m json.tool evals/evals.json` | pass |
-| YAML validity | PyYAML parse of `SKILL.md`, `openai.yaml`, `claude.yaml`, `grok.yaml` | pass |
-| Grok portability | `skills/cli-collaboration/scripts/test-fixtures/grok-portability-tests.sh` | pass |
-| Grok discovery | temporary `GROK_HOME` install plus `grok inspect --json` | pass |
-| Gemini discovery | `gemini skills list --all` with the Agents alias installed | pass, enabled without duplicate skill paths |
-| Install dry-run | `install-skill.sh --dry-run` | pass |
-| Explicit install target | `tmp="$(mktemp -d)" && install-skill.sh --target "$tmp/cli-collaboration"` | pass |
-| Explicit sync target | `sync-skill.sh --target "$tmp/cli-collaboration"` | pass after explicit install |
-| Ownership guard | `check-ownership.sh --handoff AGENT_HANDOFF.md --agent Codex README.md evals/evals.json` | pass |
-
-Git has been initialized for this workspace and the v2.2 baseline is committed on `main`.
-
-The default installed skill directories may drift from this local package until the user runs `install-skill.sh` or `sync-skill.sh --install`.
-
-## Release Readiness
-
-Release `2.5.0` is locally verified. For future release updates:
-
-1. Review the release diff and run all verification gates.
-2. Push the intentional release commit to the configured GitHub remote.
-3. Run `install-skill.sh --dry-run` before updating local installations.
-4. Add the relevant project guidance file (`AGENTS.md`, `CLAUDE.md`, or `GEMINI.md`) to projects that should enforce handoff-first collaboration across Codex, Claude Code, Gemini CLI, Grok Build, or Antigravity.
+Future v3 sidecar infrastructure (advisory locks and derived state cache) remains deferred behind empirical thresholds in `docs/future-architecture.md` and uses `.cli-collaboration/` (not `.agent/`, which Antigravity reserves for workspace customizations).
 
 ## License
 

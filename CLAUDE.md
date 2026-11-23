@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This project uses the `cli-collaboration` skill to coordinate Codex, Claude Code, Gemini CLI, Grok Build, and single-agent multi-session work on a shared repository.
+This project uses the `cli-collaboration` skill to coordinate Codex, Claude Code, Gemini CLI, Grok, Antigravity, and single-agent multi-session work on a shared repository.
 
 ## Activation
 
@@ -23,7 +23,7 @@ If you cannot fill one of those fields, read more or ask the user. Do not improv
 
 ## Ownership
 
-Never edit a file listed under `### user-reserved` or `### frozen` without explicit user approval. For `### agent-owned` files, edit only those assigned to Claude. If the request requires touching a file owned by Codex, Gemini, or another agent, stop, name the file and owner, and ask for reassignment or deferment.
+Never edit a file listed under `### user-reserved` or `### frozen` without explicit user approval. For `### agent-owned` files, edit only those assigned to Claude. If the request requires touching a file owned by Codex, Gemini, Grok, Antigravity, or another agent, stop, name the file and owner, and ask for reassignment or deferment.
 
 When in doubt, run:
 
@@ -57,22 +57,16 @@ Pause never authorizes destructive cleanup or overwrite.
 
 ## End of Shift
 
-Update `AGENT_HANDOFF.md` as the last action of the shift:
+Update `AGENT_HANDOFF.md` as the last action of the shift (from the parent session only, never concurrently from parallel subagents), matching `skills/cli-collaboration/references/handoff-template.md`:
 
 ```text
-Agent: Claude Code
-Date/time: <ISO 8601 with timezone>
-Task: <what you took on>
-Status: done | in-progress | blocked
-Files changed: <explicit list>
-Tests red: <names + reason>
-Tests green: <names>
-Open concerns: <concrete risks; never "all good">
-Next agent starts from: <exact next step, file:line when possible>
-Do not touch: <reserved files/areas>
+**Last updated:** <ISO 8601 with timezone>
+**Last agent:** Claude Code
+**Status:** done | in-progress | blocked
+## Current task / ## Files changed this shift / ## Tests / ## Open concerns / ## Next agent starts from / ## History
 ```
 
-Keep the last three detailed handoff blocks; summarize older entries into single `## History` lines as the file grows.
+Keep the last three detailed shift contexts useful; summarize older entries into single `## History` lines as the file grows.
 
 ## Single-Session Use
 

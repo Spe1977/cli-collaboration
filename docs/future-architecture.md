@@ -24,7 +24,7 @@ At least **one documented concurrent-write incident** on `AGENT_HANDOFF.md`, rec
 
 Single isolated incidents should first promote the minimum opt-in guardrail, not the whole v3 lock suite. Recurring incidents prove the problem is structural and justify making locking the default.
 
-**If tripped:** introduce `.agent/lock` (described below). Do not introduce in-handoff state objects.
+**If tripped:** introduce `.cli-collaboration/lock` (described below). Do not introduce in-handoff state objects.
 
 ## Concurrency
 
@@ -42,7 +42,7 @@ Promote to flock-based locking when at least one concurrent-write incident is do
 
 At least **two CLI targets** consume `AGENT_HANDOFF.md` through structured channels (MCP resources, programmatic file readers in tooling, dashboards) and would benefit from a parsed representation rather than the raw markdown.
 
-**If tripped:** generate a `.agent/state.json` sidecar (described below) on every end-of-shift, derived from the markdown. The markdown remains authoritative; the JSON is regenerated from it.
+**If tripped:** generate a `.cli-collaboration/state.json` sidecar (described below) on every end-of-shift, derived from the markdown. The markdown remains authoritative; the JSON is regenerated from it.
 
 ### Threshold 4 — Recurring eval failure
 
@@ -52,15 +52,17 @@ Scenarios C (ownership conflict) or F (user supersession) — from `references/v
 
 ## Sidecar Design
 
-If any threshold trips, the v3 evolution lives in a `.agent/` directory at the repository root. It is git-ignored by default; downstream projects may opt into committing it.
+If any threshold trips, the v3 evolution lives in a `.cli-collaboration/` directory at the repository root. It is git-ignored by default; downstream projects may opt into committing it.
+
+> **Why `.cli-collaboration/` instead of `.agent/`:** Antigravity IDE and `agy` CLI reserve `.agent/` (alongside `.agents/`) as a workspace customization discovery root for skills, rules, and plugins. Using `.cli-collaboration/` avoids colliding with Antigravity's customization scanner.
 
 ```text
-.agent/
+.cli-collaboration/
 ├── state.json          # parsed handoff state, regenerated on every end-of-shift
 └── lock                # advisory lock, only present when an agent is mid-shift
 ```
 
-### `.agent/state.json`
+### `.cli-collaboration/state.json`
 
 A derived representation of the current `AGENT_HANDOFF.md`. Schema sketch:
 
@@ -91,9 +93,9 @@ A derived representation of the current `AGENT_HANDOFF.md`. Schema sketch:
 
 `state.json` is never edited by hand. The script that generates it from the markdown is the only writer. If a future agent finds themselves editing `state.json` to change behavior, the protocol is being violated.
 
-### `.agent/lock`
+### `.cli-collaboration/lock`
 
-An advisory POSIX lock file, created with `mkdir .agent/lock` (atomic on POSIX filesystems) when an agent starts a shift and removed at end-of-shift. Schema for the lock contents (one file: `.agent/lock/owner`):
+An advisory POSIX lock file, created with `mkdir .cli-collaboration/lock` (atomic on POSIX filesystems) when an agent starts a shift and removed at end-of-shift. Schema for the lock contents (one file: `.cli-collaboration/lock/owner`):
 
 ```text
 agent: Codex
@@ -128,4 +130,4 @@ When a threshold trips:
 
 ## Current Status
 
-As of the v2.2 release, **no threshold has tripped**. No v3 feature is implemented. This document exists to ensure that when a threshold does trip, the response is proportionate, well-scoped, and consistent with the principles that made v2.2 the chosen design.
+As of the v2.6.0 release, **no v3 threshold has tripped**. Optional deterministic hooks (`hook-guard.py`) and structural handoff linting (`evals/lint-handoff.py`) landed as standalone guardrails without adding in-handoff machine state or `.cli-collaboration/` sidecar files. This document exists to ensure that when a threshold does trip, the response is proportionate, well-scoped, and consistent with the principles that made v2.2+ the chosen design.

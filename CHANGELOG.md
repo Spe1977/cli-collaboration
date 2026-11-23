@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [2.6.0] — 2026-11-23
+
+This release builds on `v2.5.0` to add first-class support for **Antigravity (IDE / App 2.0 / `agy` CLI)**, harden ownership path/alias matching, introduce optional deterministic lifecycle hooks across Antigravity, Claude Code, and Gemini CLI, add sandbox-friendly language fallbacks, introduce an opt-in local live eval harness, and expand mechanical CI verification to 10 steps.
+
+### Added
+
+- **Antigravity adapter & metadata**: new `skills/cli-collaboration/references/antigravity-adapter.md` and `skills/cli-collaboration/agents/antigravity.yaml` covering `~/.gemini/config/skills/` vs `.agents/skills/` discovery, dual `AGENTS.md`/`GEMINI.md` 20k-token rule budget, Plan/Execute Mode, single-writer coordinator discipline for subagents/swarms, and terminal sandbox behavior.
+- **Deterministic lifecycle hook guard**: new stdlib-only `skills/cli-collaboration/scripts/hook-guard.py` (reusing `parse-ownership.py`) plus copy-ready templates in `examples/hooks/` (`antigravity.hooks.json`, `claude.settings.json`, `gemini.settings.json`) supporting `SessionStart`, `PreToolUse`/`BeforeTool` (ownership conflict denial + destructive git confirmation/block), and Antigravity `Stop` handoff validation.
+- **Hook test suite**: new `skills/cli-collaboration/scripts/test-fixtures/hook-guard-tests.sh` (11 blocks) verifying all 3 runtimes across `session-start`, `pre-tool` (including paused state, malformed handoffs, and tricky git variants), `stop`, and live `examples/hooks/*.json` template flag validity.
+- **Linter unit tests & opt-in live eval harness**: new `evals/test-lint-handoff.sh` (10 positive/negative cases for `evals/lint-handoff.py`) and new stdlib-only `evals/run-live-evals.py` (`--cli <claude|codex|gemini|agy|grok>`, `--dry-run`, `--self-test`) for local behavioral evaluation of Scenarios `A`–`F` and the 14 `trigger_evals` in isolated git sandboxes.
+- **Markdown link & executable integrity check**: added Step 9 to `evals/run-mechanical-checks.sh` verifying relative links across `SKILL.md` and `references/*.md` plus `+x` permissions on all shipped/eval scripts.
+- **Install/sync preset flags**: `install-skill.sh` and `sync-skill.sh` now accept `--codex`, `--agents`, `--grok`, `--claude`, `--antigravity`, `--gemini`, and `--all` (omitting `~/.gemini/skills` from `--all` to prevent Gemini duplicate-skill conflicts with `~/.agents/skills`).
+- **Sandbox language fallbacks**: `lang.sh` now supports project-local `.cli-collaboration.json` (`--local`), `$CLI_COLLAB_LANG` fallback on `get`, and clean exit code `4` when `$HOME/.config` is read-only or sandboxed.
+- **Trigger eval suite**: added 14 positive/negative `trigger_evals` cases to `evals/evals.json`.
+
+### Changed
+
+- **Ownership parser hardening (`parse-ownership.py`)**: added `./` prefix stripping, automatic relativization of absolute paths inside the handoff directory, full multi-word owner phrase extraction prior to separators, and case-insensitive agent alias normalization while keeping `Antigravity` (`antigravity`) strictly distinct from `Gemini` (`gemini`).
+- **Out-of-tree install backups (`install-skill.sh`)**: divergent pre-existing installs are now backed up to a sibling `../skills-backups/` directory outside `skills/` so skill discovery paths stay clean; rollback cleans up empty `skills-backups/` directories automatically.
+- **`SKILL.md` optimization & End-of-Shift alignment**: added negative trigger boundaries in `description`, explicit `<SKILL_DIR>/scripts/` path resolution, sandbox-safe language handling, and aligned `## End Of Shift` fields directly with `references/handoff-template.md` and `evals/lint-handoff.py`.
+- **Lean project guidance examples**: refactored `examples/CLAUDE.md` and `examples/GEMINI.md` into concise progressive-disclosure pointers alongside `examples/AGENTS.md`; updated root `CLAUDE.md` and `GEMINI.md` to include `Grok` and `Antigravity` (with explicit `Antigravity` vs `Gemini` identity guidance).
+- **Future v3 sidecar path (`docs/future-architecture.md`)**: renamed proposed `.agent/` sidecar directory to `.cli-collaboration/` to avoid colliding with Antigravity's reserved `.agent/` customization root.
+- **Expanded structural lint & mechanical CI**: `evals/lint-handoff.py` now validates header metadata (`Last updated`, `Last agent`, `Status`), non-trivial `## Open concerns`, and prints a soft warning above 16,000 chars (~4,000 tokens); `evals/run-mechanical-checks.sh` expanded from 5 to 10 steps (including `run-tests.sh` 33 cases, `install-rollback-test.sh` 8 checks, `lang-tests.sh` 34 assertions, `hook-guard-tests.sh` 11 blocks, `test-lint-handoff.sh` 10 cases, `run-live-evals.py --self-test`, and link/`+x` integrity).
+- **Documentation & tests**: updated `README.md`, `README_IT.md`, `CHANGELOG.md`, `CONTRIBUTORS.md`, `CONTRIBUTORS_IT.md`, `CLAUDE.md`, `GEMINI.md`, `docs/future-architecture.md`, `codex-adapter.md`, `claude-adapter.md`, `gemini-adapter.md`, `grok-adapter.md`, `handoff-template.md`, `alternate-workflows.md`, `run-tests.sh`, `install-rollback-test.sh`, `lang-tests.sh`, and `grok-portability-tests.sh`.
+
 ## [2.5.0] — 2026-07-20
 
 This release adds Grok Build compatibility without forking or replacing the

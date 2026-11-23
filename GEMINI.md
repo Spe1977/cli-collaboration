@@ -1,6 +1,6 @@
 # GEMINI.md
 
-This project uses the `cli-collaboration` skill to coordinate Codex, Claude Code, Gemini CLI, Grok Build, and single-agent multi-session work on a shared repository.
+This project uses the `cli-collaboration` skill to coordinate Codex, Claude Code, Gemini CLI, Grok, Antigravity, and single-agent multi-session work on a shared repository.
 
 ## Activation
 
@@ -21,14 +21,17 @@ Before editing any file, state explicitly in your initial response, visible to t
 
 If you cannot fill one of those fields, read more or ask the user. Do not improvise.
 
-## Ownership
+## Ownership & Identity
 
-Never edit a file listed under `### user-reserved` or `### frozen` without explicit user approval. For `### agent-owned` files, edit only those assigned to Gemini. If the request requires touching a file owned by Codex, Claude, or another agent, stop, name the file and owner, and ask for reassignment or deferment.
+- **Gemini CLI:** use `--agent Gemini` and `**Last agent:** Gemini CLI`.
+- **Antigravity IDE / App 2.0 / `agy`:** use `--agent Antigravity` and `**Last agent:** Antigravity`.
+
+Never edit a file listed under `### user-reserved` or `### frozen` without explicit user approval. For `### agent-owned` files, edit only those assigned to your active identity (`Gemini` or `Antigravity`). If the request requires touching a file owned by Codex, Claude, Grok, or another agent, stop, name the file and owner, and ask for reassignment or deferment.
 
 When in doubt, run:
 
 ```bash
-skills/cli-collaboration/scripts/check-ownership.sh --agent Gemini <file...>
+skills/cli-collaboration/scripts/check-ownership.sh --agent <Gemini|Antigravity> <file...>
 ```
 
 Exit `0` = no conflict, `1` = ownership conflict, `2` = malformed handoff.
@@ -57,22 +60,16 @@ Pause never authorizes destructive cleanup or overwrite.
 
 ## End of Shift
 
-Update `AGENT_HANDOFF.md` as the last action of the shift:
+Update `AGENT_HANDOFF.md` as the last action of the shift (from the parent/coordinator session only, never concurrently from parallel subagents or swarms), matching `skills/cli-collaboration/references/handoff-template.md`:
 
 ```text
-Agent: Gemini CLI
-Date/time: <ISO 8601 with timezone>
-Task: <what you took on>
-Status: done | in-progress | blocked
-Files changed: <explicit list>
-Tests red: <names + reason>
-Tests green: <names>
-Open concerns: <concrete risks; never "all good">
-Next agent starts from: <exact next step, file:line when possible>
-Do not touch: <reserved files/areas>
+**Last updated:** <ISO 8601 with timezone>
+**Last agent:** <Gemini CLI | Antigravity>
+**Status:** done | in-progress | blocked
+## Current task / ## Files changed this shift / ## Tests / ## Open concerns / ## Next agent starts from / ## History
 ```
 
-Keep the last three detailed handoff blocks; summarize older entries into single `## History` lines as the file grows.
+Keep the last three detailed shift contexts useful; summarize older entries into single `## History` lines as the file grows.
 
 ## Single-Session Use
 

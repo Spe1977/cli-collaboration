@@ -1,57 +1,56 @@
 # AGENT_HANDOFF.md
 
-**Last updated:** 2026-07-21T13:52:15+02:00
-**Last agent:** Codex
-**Status:** done
+**Last updated:** 2026-11-23T14:04:39+01:00
+**Last agent:** Antigravity
+**Status:** in-progress
 
 ## Current task
-Allineare i metadati pubblici GitHub alla sorgente `2.5.0`: pubblicare la release e dichiarare nell'About la compatibilita con Grok Build.
+Reconcile `main` onto `origin/main` (`5954dfd`, `v2.5.0`), update contributors and release documentation for `v2.6.0`, run local mechanical checks, and prepare GitHub CI verification, release publication (`v2.6.0`), and repository About updates under explicit User Supersession.
 
 ## Current state
-- La release stabile `v2.5.0` e pubblicata come **Latest** su GitHub; non e draft ne prerelease.
-- Il tag remoto `v2.5.0` punta al commit di release verificato `f5e9024ca26a6488c5d3ba8ae38c3b48a393a153`; `main` aggiunge soltanto il successivo aggiornamento operativo dell'handoff.
-- L'About del repository dichiara ora la compatibilita con Codex, Claude Code, Gemini/Antigravity CLI e Grok Build.
-- Le note della release `v2.5.0` includono anche le funzionalita `2.4.0` pubblicate dopo la precedente release GitHub `v2.3.0`; non e stata creata una release retroattiva separata `v2.4.0`.
-- Il port Grok-specifico e stato corretto in una release portabile unica `2.5.0`: `SKILL.md` resta neutrale e compatibile con i validator condivisi; le istruzioni specifiche sono isolate nell'adapter Grok.
-- Install e sync hanno tre target predefiniti non duplicati (Codex, Agents e Grok). Gemini CLI scopre l'alias interoperabile Agents; Gemini-only, Antigravity e Claude restano target espliciti. Il parser mantiene `Codex` come default storico e gli altri runtime passano `--agent` esplicitamente.
-- Aggiunti adapter Grok, metadata documentali e fixture di portabilita. Grok 0.2.106 scopre correttamente la copia installata in una home temporanea come skill utente invocabile.
-- Ripristinati i permessi corretti dei file e ignorato solo lo stato locale `.claude/settings.local.json`; `cli-collaboration.png` e i file user-reserved non sono stati toccati.
-- Le copie realmente installate per Codex, `.agents`/Gemini, Gemini/Antigravity, Grok e Claude sono byte-identiche alla sorgente `2.5.0`; la copia Gemini duplicata e tutti i backup sono stati spostati fuori dalle directory di discovery.
-- Il commit di release `29b3fd0` e la correzione CI `9f19636` sono su `origin/main`. GitHub Actions e completamente verde: ShellCheck, fixture Ubuntu e fixture macOS hanno conclusione `success`.
+- **User Supersession (2026-11-23):** User authorized Antigravity to reconcile local `main` onto `origin/main`, add/update Antigravity in contributors, refresh `v2.6.0` documentation, verify CI, publish the `v2.6.0` GitHub Release, and improve repository description/topics while keeping `### user-reserved` (`final-skill.md`, `workflow.md`, `progetti-1-2.md`), `cli-collaboration.png`, `graphify-out/`, and `.claude/` untouched.
+- **Git history & hygiene reconciled:** Fast-forwarded local `main` index cleanly onto `origin/main` (`5954dfd`), restored `docs/superpowers/{plans,specs}/2026-07-20-grok-multicli-compatibility*`, `.gitignore`, and `brainplan.md`, normalized file modes (`0644` non-scripts / `0755` scripts), and preserved authentic `v2.5.0` history in `CHANGELOG.md` and `CONTRIBUTORS*.md`.
+- **Runtime skill homes synced:** User verified `install-skill.sh --all` and `sync-skill.sh --all` across Codex (`~/.codex`), Agents/Gemini CLI (`~/.agents`), Grok (`~/.grok`), Claude Code (`~/.claude`), and Antigravity (`~/.gemini/config`) — all 5 targets `in-sync` with no duplicate `~/.gemini/skills/cli-collaboration`.
+- **Documentation aligned for `v2.6.0`:** Updated `CONTRIBUTORS.md`, `CONTRIBUTORS_IT.md` (restoring Grok Build + updating Antigravity), `CHANGELOG.md`, `README.md`, `README_IT.md` (added CI badge, language/changelog/contributor links, `How It Was Developed`, accurate repo tree, global hook paths), `CLAUDE.md`, and `docs/future-architecture.md`.
 
 ## File ownership
 ### agent-owned
 - skills/cli-collaboration/SKILL.md: Codex — core protocol and trigger body
-- skills/cli-collaboration/scripts/*: Codex — guardrail scripts and executable fixture tests
-- skills/cli-collaboration/scripts/test-fixtures/*: Codex — ownership checker fixtures
+- skills/cli-collaboration/scripts/*: Codex — guardrail scripts, hook-guard.py, and executable fixture tests
+- skills/cli-collaboration/scripts/test-fixtures/*: Codex — ownership, rollback, lang, portability, and hook fixtures
 - evals/evals.json: Codex — technical eval wiring for scenarios A-F
+- evals/test-lint-handoff.sh: Codex — positive/negative unit tests for lint-handoff.py
+- evals/run-live-evals.py: Codex — opt-in local live eval harness for scenarios A-F & trigger_evals
 - skills/cli-collaboration/agents/openai.yaml: Codex — OpenAI metadata
+- skills/cli-collaboration/agents/grok.yaml: Grok — documentation-only Grok metadata
 - skills/cli-collaboration/references/codex-adapter.md: Codex — Codex-specific adapter notes and script ABI
+- skills/cli-collaboration/references/grok-adapter.md: Grok — Grok discovery, identity, tools, and Bluefin guidance
 - skills/cli-collaboration/references/alternate-workflows.md: Codex — explicit non-code handoff workflow reference
-- examples/AGENTS.md: Codex — Codex/AGENTS project guidance example
+- docs/superpowers/specs/*: Codex — approved implementation design records
+- docs/superpowers/plans/*: Codex — executable implementation plans
+- examples/AGENTS.md: Codex — Codex/Grok/Antigravity project guidance example
 - README.md: Codex — package entry point, install commands, release gates
 - README_IT.md: Codex — Italian package entry point translation
 - LICENSE: user/GitHub — MIT license generated during repository creation
 - .gitignore: Codex — repository hygiene for local guardrail artifacts
 - CLAUDE.md: Claude — Claude project guidance in the root
-- GEMINI.md: Gemini — Gemini project guidance in the root
+- GEMINI.md: Gemini — Gemini & Antigravity project guidance in the root
 - CONTRIBUTORS.md: Claude — multi-agent contribution record
 - CONTRIBUTORS_IT.md: Claude — Italian mirror of the multi-agent contribution record
-- CHANGELOG.md: Codex — release tracking and version-gate documentation (reassigned under User Supersession for v2.5)
+- CHANGELOG.md: Claude — release changelog (v2.3.0 through v2.6.0)
 - skills/cli-collaboration/references/handoff-template.md: Claude — canonical human handoff template
 - skills/cli-collaboration/references/handoff-anti-patterns.md: Claude — semantic failure modes
 - skills/cli-collaboration/references/validation-scenarios.md: Claude — textual scenarios A-F and negative asserts
 - skills/cli-collaboration/agents/claude.yaml: Claude — documentation-only Claude metadata
 - skills/cli-collaboration/references/claude-adapter.md: Claude — Claude Code adapter notes
 - examples/AGENT_HANDOFF.md: Claude — filled handoff example
-- examples/CLAUDE.md: Claude — Claude project guidance example
-- docs/future-architecture.md: Claude — v3 thresholds and sidecar policy
-- examples/GEMINI.md: Gemini — Gemini project guidance example
-- skills/cli-collaboration/references/gemini-adapter.md: Gemini — Gemini adapter notes
-- skills/cli-collaboration/agents/grok.yaml: Grok — documentation-only Grok metadata
-- skills/cli-collaboration/references/grok-adapter.md: Grok — Grok discovery, identity, tools, and Bluefin guidance
-- docs/superpowers/specs/*: Codex — approved implementation design records
-- docs/superpowers/plans/*: Codex — executable implementation plans
+- examples/CLAUDE.md: Claude — lean Claude project guidance example
+- docs/future-architecture.md: Claude — v3 thresholds and `.cli-collaboration/` sidecar policy
+- examples/GEMINI.md: Gemini — lean Gemini & Antigravity project guidance example
+- skills/cli-collaboration/references/gemini-adapter.md: Gemini — Gemini CLI adapter notes
+- skills/cli-collaboration/agents/antigravity.yaml: Antigravity — documentation-only Antigravity metadata
+- skills/cli-collaboration/references/antigravity-adapter.md: Antigravity — Antigravity IDE / App 2.0 / agy CLI adapter
+- examples/hooks/*: Antigravity — deterministic hook templates for Antigravity, Claude Code, and Gemini CLI
 - brainplan.md: Codex — review plan for brainstorming workflow documentation integration
 
 ### user-reserved
@@ -63,58 +62,30 @@ Allineare i metadati pubblici GitHub alla sorgente `2.5.0`: pubblicare la releas
 No frozen files currently declared.
 
 ## Files changed this shift
-- Metadato GitHub About: descrizione aggiornata con Gemini/Antigravity CLI e Grok Build.
-- GitHub release/tag `v2.5.0`: pubblicata come release stabile Latest sul commit `f5e9024`.
-- `AGENT_HANDOFF.md`: stato della pubblicazione, verifiche e prossimo passo registrati per ultimi.
-- Nessun file di codice, skill o documentazione di release e stato modificato.
+- `.gitignore`, `brainplan.md`, `docs/superpowers/{plans,specs}/2026-07-20-grok-multicli-compatibility*`: reconciled onto `origin/main` (`5954dfd`) and normalized file permissions.
+- `CONTRIBUTORS.md`, `CONTRIBUTORS_IT.md`: restored **Grok Build (xAI)** and added **Antigravity (Google DeepMind)** Phase 5 / `v2.6.0` record.
+- `CHANGELOG.md`: restored authentic `[2.5.0] — 2026-07-20` release notes and aligned `[2.6.0]` summary.
+- `README.md`, `README_IT.md`: added CI badge and quick nav links, restored `How It Was Developed` / `Come E Stato Sviluppato`, fixed `Package Structure` tree, removed dangling `workflow.md` mention, and documented global hook paths.
+- `CLAUDE.md`, `docs/future-architecture.md`: aligned `End of Shift` format with `handoff-template.md` and updated `Current Status` to `v2.6.0`.
 
 ## Tests
-- Red:
-  - Nessuno: il turno modifica solo metadati GitHub e l'handoff, non il codice.
-- Green:
-  - `gh repo view`: About verificato con Grok Build e Gemini/Antigravity CLI.
-  - `gh release list`: `v2.5.0` indicata come Latest.
-  - `gh release view` e `gh api .../releases/latest`: release stabile, pubblicata, non draft e non prerelease.
-  - `gh api .../git/ref/tags/v2.5.0` e `git ls-remote`: tag di release verificato sul commit `f5e9024`; `main` era sullo stesso commit prima del solo aggiornamento finale dell'handoff.
+- Red: none (reconciliation and documentation/release prep shift).
+- Green: pending final 10-step `bash evals/run-mechanical-checks.sh` run before commits and GitHub Actions CI verification after push.
 
 ## Open concerns
-- Nessuna azione pendente per la richiesta corrente.
-- `cli-collaboration.png` resta un file locale preesistente non tracciato e non correlato; non e stato toccato.
+- GitHub Actions `shellcheck`, `fixtures (ubuntu-latest)`, and `fixtures (macos-latest)` must pass on `main` before tagging and publishing `v2.6.0`.
+- `graphify-out/` predates `v2.5.0`/`v2.6.0` changes and remains untouched locally; `cli-collaboration.png` stays untracked and untouched.
 
 ## Next agent starts from
-**Next agent: task-fit decides — GitHub About e release Latest `v2.5.0` sono allineati; il tag resta sul commit di release `f5e9024` e `main` aggiunge solo questo handoff. Nessuna azione correttiva pendente.**
+**Next agent: Antigravity (current shift continuation).** Run `bash evals/run-mechanical-checks.sh` and `git diff --check`, split changes into clean atomic commits on `main`, push `origin main`, watch GitHub Actions CI until all 3 jobs pass, then tag/publish `v2.6.0`, update GitHub About metadata, and record the final release commit/URLs in `AGENT_HANDOFF.md`.
 
-Do not touch: `final-skill.md`, `workflow.md`, or `progetti-1-2.md` (user-reserved). Do not touch `cli-collaboration.png`; it was already untracked before this shift and is unrelated.
-
-## End of shift
-
-Agent: Codex
-Date/time: 2026-07-21T13:52:15+02:00
-Task: Allineare la release e l'About GitHub alla skill `2.5.0` compatibile con Grok Build.
-Status: done
-Files changed: `AGENT_HANDOFF.md`; metadato GitHub About; release/tag GitHub `v2.5.0`.
-Tests red: nessuno, perche non sono stati modificati file di codice.
-Tests green: verifica autenticata About; release Latest stabile; tag remoto sul commit di release `f5e9024`; `main` verificato prima del solo commit finale dell'handoff.
-Open concerns: nessuno per la richiesta corrente; `cli-collaboration.png` resta preesistente e non tracciato.
-Next agent starts from: nessuna correzione pendente; partire da una nuova richiesta utente.
-Do not touch: `final-skill.md`, `workflow.md`, `progetti-1-2.md`, `cli-collaboration.png`.
+Do not touch: `final-skill.md`, `workflow.md`, `progetti-1-2.md` (`user-reserved`), `cli-collaboration.png`, or `graphify-out/`.
 
 ## History
-- 2026-07-21T13:52:15+02:00 - Codex: Aggiornato l'About GitHub con Gemini/Antigravity CLI e Grok Build; pubblicata `v2.5.0` come release stabile Latest sul commit `f5e9024`. `main` aggiunge soltanto questo successivo aggiornamento operativo dell'handoff. Nessun file di codice modificato. (done)
-- 2026-07-20T18:10:43+02:00 - Codex: Pushata la correzione CI `9f19636`; GitHub Actions completata con successo su ShellCheck, fixture Ubuntu e fixture macOS. Release `2.5.0`, documentazione Grok/Gemini/Antigravity e cinque installazioni locali non duplicate risultano allineate. Handoff chiuso per ultimo. (done)
-- 2026-07-20T18:06:43+02:00 - Codex: Pushato su `origin/main` il commit di release `29b3fd0`. GitHub Actions: fixture Ubuntu/macOS verdi, ShellCheck rosso per un solo `SC2016` nel guard che cerca intenzionalmente `$GROK_SKILL_HOME` letterale. Riprodotto con il container ufficiale, aggiunta soppressione locale motivata, container ora verde; installazioni reali risincronizzate. Correzione CI pronta per commit/push. (in-progress)
-- 2026-07-20T17:59:20+02:00 - Codex: Completata la documentazione Grok richiesta dall'utente in README, guidance root, esempi, adapter, template, crediti e changelog. Le fonti ufficiali Gemini incluse nella CLI hanno confermato che `.agents/skills` e alias prioritario di `.gemini/skills`; riprodotto il warning di duplicazione, aggiunta regressione RED, rimossi i default duplicati e verificata la skill Gemini abilitata senza conflitti. Antigravity resta target esplicito; cinque installazioni reali non duplicate sincronizzate. Release pronta per commit/push diretto su `main`. (in-progress)
-- 2026-07-20T17:44:03+02:00 - Codex: Su richiesta esplicita dell'utente, sincronizzate alla sorgente `2.5.0` le copie reali Codex, `.agents`, Gemini standard, Gemini/Antigravity, Grok e Claude. Verificate tutte con `sync-skill.sh`; Grok scopre una sola skill invocabile, Gemini la carica abilitata da `.agents` e segnala la copia identica `.gemini/skills` come override non bloccante. Backup preservati fuori dalle directory di discovery. (done)
-- 2026-07-20T17:29:49+02:00 - Codex: Corretto il port Grok in una release condivisa `2.5.0` compatibile con Codex, Claude Code, Gemini CLI e Grok Build; aggiunti adapter/metadata/test Grok, preservati parser e ABI storici, normalizzati i permessi, risolta una race dei fixture, verificati validator, 6/6 gate meccanici, 24/24 test lingua, install/sync su quattro target temporanei e discovery reale con Grok 0.2.106. Nessun commit, push o sync delle installazioni reali. Modifiche cross-ownership autorizzate dall'utente sotto User Supersession. (done)
-- 2026-05-24T23:48:00+02:00 - Gemini CLI: Risolto avvisi ShellCheck (SC2295 e SC1090) in lang.sh e lang-tests.sh, eseguito il push su main, sincronizzate tutte le installazioni locali (.codex, .agents, .gemini) rimuovendo il drift e spostando i backup per evitare conflitti. (done)
-- 2026-05-24T23:42:00+02:00 - Gemini CLI: Inizializzato il repository locale Git ripristinando il folder `.git` originale da `evals/.git` alla radice del workspace, verificato lo stato con i test passanti (5/5 mechanical checks e 24/24 lang tests verdi), eseguito il commit di tutte le modifiche locali della v2.4.0 ed effettuato il push con successo sul branch `main` del repository remoto GitHub (`Spe1977/cli-collaboration`). (done)
-- 2026-05-24T23:28:29+02:00 - Claude Code: Updated the repository source from 2.3.0 to 2.4.0 to match the installed copy at `~/.claude/skills/cli-collaboration` (inverse of the prior repo→installed syncs). The 2.4.0 delta is the **Language Preference** feature: synced `SKILL.md` (version bump + `## Language Preference` section), `references/{claude,codex,gemini}-adapter.md` (documentary notes), `scripts/install-skill.sh`, `scripts/sync-skill.sh` (new Gemini home target), plus new `scripts/lang.sh` and `scripts/test-fixtures/lang-tests.sh`, via `rsync -av` (installed→repo). Reviewed the pre-sync content diff first (only version bump + language feature + Gemini target). Under explicit user authorization, bumped the repo-root release docs that the installed copy does not carry: `README.md`/`README_IT.md` version line and a new `CHANGELOG.md [2.4.0]` entry (also promoting the prior `Unreleased` brainstorming items). Edited Codex-owned and Gemini-owned files under User Supersession (noted in Open concerns). Verified `diff -qr` (no diff), `evals/run-mechanical-checks.sh` (5/5 green), `lang-tests.sh` (24/24 green). (done)
-- 2026-05-21T23:32:08+02:00 - Claude Code: Synchronized `/home/leospe/.claude/skills/cli-collaboration` with the repository source via `rsync -av --delete`. Three files differed before sync (SKILL.md, references/handoff-template.md, and the new references/alternate-workflows.md from the brainplan integration). Pre-existing backup at `~/.claude/skills-backups/cli-collaboration.backup.20260519235128` was already outside the discovery path, no moves required. Verified with `diff -qr` (no diff) and `bash evals/run-mechanical-checks.sh` (5/5 green). All four installed CLI copies (Codex, Agents, Gemini, Claude) are now aligned with the repo. (done)
-- 2026-05-21T23:28:40+02:00 - Gemini CLI: Synchronized `/home/leospe/.gemini/skills/cli-collaboration` with the repository source and moved backups to `/home/leospe/.gemini/skills-backups/` to prevent discovery conflict. Ran mechanical validation checks (5/5 green). (done)
-- 2026-05-21T23:25:41+02:00 - Codex: Updated installed `cli-collaboration` copies in `/home/leospe/.codex/skills/cli-collaboration` and `/home/leospe/.agents/skills/cli-collaboration` from the repository source. Moved installer-created backups to `/home/leospe/.codex/skills-backups/` and `/home/leospe/.agents/skills-backups/` so skill discovery paths stay clean. Verified both installs with `diff -qr`, matching `SKILL.md` SHA-256 hashes, and no `cli-collaboration.backup.*` directories remaining directly under `~/.codex/skills` or `~/.agents/skills`. (done)
-- 2026-05-21T23:04:22+02:00 - brainplan.md review + integration (summarized — timestamp anchored to the most recent entry in the summarized range, originally spanning 22:16-23:04, see git log for per-commit detail): Codex authored `brainplan.md` as a review-oriented plan for documentation-only multi-LLM brainstorming workflow integration; Gemini CLI and Claude Code reviewed and approved (Claude added five implementation nuances and an ordered checklist); Codex implemented adding `references/alternate-workflows.md` (brainstorming seed template + bootstrap handoff template), minimal `SKILL.md` routing update, README/README_IT/handoff-template/CHANGELOG pointers (with user-authorized Claude-owned cross-edits), then committed and pushed to `origin/main` with all 5/5 mechanical checks green; Codex closed with an optional future note in `brainplan.md` on bounding oversized handoff files and using project-local `ctxvault` as an optional semantic index. No scripts, fixtures, parser behavior, or eval wiring changed. (done)
-- 2026-05-21T08:15:02+02:00 - Gemini CLI: Recreated root-level `GEMINI.md` and `CLAUDE.md` files in the updated `v2.3.0` workspace and registered them in agent ownership. (done)
-- 2026-05-21T02:30 - PR #4 macOS Bash 3.2 fix saga + post-merge cleanup (summarized — timestamp anchored to the most recent entry in the summarized range, originally spanning 2026-05-20T18:30 → 2026-05-21T02:30 across 11 shifts, see git log and CHANGELOG.md v2.3.0 entry for per-commit detail): the v2.3 plan landed P2 follow-up (`POSIX-shell` → `Bash on Linux/macOS` doc-honesty correction, merged as `fc396f1`), P4 mechanical eval checks (`evals/run-mechanical-checks.sh` 4-step driver + `evals/lint-handoff.py` structural lint + GitHub Actions CI matrix update), and P5 housekeeping (`version: "2.3.0"` in SKILL.md frontmatter + README surfacing + new CHANGELOG.md + CONTRIBUTORS_IT.md mirror), all bundled into the joint P4/P5 PR #4 on branch `claude/analyze-handoff-p2-a6c44`. PR #4 then exposed a `fixtures (macos-latest)` regression on the `endash-owner` and `glob-crosses-slash` fixtures, root-caused to Bash 3.2.57 pattern matching being unreliable with multibyte UTF-8 input across all attempted Bash code paths. The fix saga ran 8 shifts (each round prescribed by Codex/ChatGPT review): (1) initial LC_ALL=C + ANSI-C-quoted `EN_DASH`/`EM_DASH` variables + source-guard regression test; (2) BSD-grep portability fix (removed `grep -P`, re-implemented source-guard in Python as 5th `run-mechanical-checks.sh` step); (3) `sed`-based `normalize_dashes()` to push multibyte handling outside Bash; (4) definitive: deleted `normalize_dashes()` entirely, parser ignores the separator and extracts first whitespace-delimited token; (5) `[[:space:]]` → literal ASCII space; (6) parameter expansion → `set --` word-splitting via `first_word()`; (7) Plan B escalation to `awk` micro-delegation for owner extraction; (8) Plan C: full Python delegation via new `skills/cli-collaboration/scripts/parse-ownership.py` with `fnmatch.fnmatchcase` for globs, `check-ownership.sh` reduced to thin wrapper preserving the full CLI contract, Python 3 documented as runtime dependency in README/README_IT. After Plan C landed, Claude documented the Plan C migration in `codex-adapter.md` Script ABI + Ownership Format sections and in the `CHANGELOG.md` v2.3.0 entry (parser migration under `### Added`/`### Changed`). PR #4 then merged to `main` as `814ee88`; Claude's post-merge cleanup on branch `claude/post-merge-doc-cleanup` refreshed stale handoff sections, added `parse-ownership.py` to README/README_IT `## Package Structure`/`## Struttura Del Pacchetto` script trees, and confirmed all five v2.3 PRs are on `main`. Throughout the saga: `run-tests.sh` 8/8 green and `run-mechanical-checks.sh` 5/5 green at every shift; Codex/ChatGPT prescribed each fix and reviewed each round. Caveat: a true Bash-3.2 runtime was not reachable from the dev environment (network policy blocks the GNU bash 3.2.57 tarball), so each Bash-side fix was validated structurally on Bash 5.2 across three locales until macOS CI confirmed; Plan C decisively closed the saga by moving the parser body off Bash. (done)
-- 2026-05-20T17:30 - v2.3 transition planning + P1 + P2 (summarized per `SKILL.md` history-compaction rule, full detail in CHANGELOG.md and git log; timestamp anchored to the most recent entry in the summarized range, originally spanning 11:30-17:30): plan elaborated and locked with Codex/Gemini approval (five PRs + tag), three Codex corrections accepted (handoff-template the worst glob target, future-architecture out of P1, "mechanical eval checks" naming), P1 doc-honest globs implemented and merged as `10c0c5a` with eighth fixture green, P2 GitHub Actions CI matrix implemented and merged as `fc396f1`, Gemini CLI cross-CLI QA approval recorded, Codex/ChatGPT approval of P3 final shape recorded, AGENT_HANDOFF.md consolidated for fresh-chat resumption, P3 PR #2 awaiting user merge with HEAD `84ff51d`. (done)
-- 2026-05-20T10:30 - Claude Code: Untracked internal design notes (`analisi.md`, `final-skill.md`, `workflow.md`) and added them to `.gitignore` under user supersession; files preserved locally. (done)
-- 2026-05-20T00:35 - v2.2 baseline buildout (summarized — see git log for per-commit detail; timestamp anchored to the most recent entry in the summarized range, originally spanning 2026-05-19 through 2026-05-20T00:35): Codex implemented Phase 1 (core SKILL.md, guardrail scripts, fixture suite, OpenAI metadata, Codex adapter, README, .gitignore, parser hardening, Git baseline `e7bd2e7`, install-target sync); Claude Code implemented Phase 2 (semantic references — handoff-template, handoff-anti-patterns, validation-scenarios; Claude adapter and metadata; examples AGENT_HANDOFF.md and CLAUDE.md; docs/future-architecture.md; README review items R1-R12; install-target drift detection; CONTRIBUTORS.md and closing audit); Gemini CLI implemented Phase 3 (GEMINI.md, gemini-adapter.md, cross-agent verification, tri-CLI consistency); Codex pushed `main` to `Spe1977/cli-collaboration`, added README_IT.md, merged the MIT license commit, and moved cli-collaboration backup directories out of skill discovery paths. (done)
+- 2026-11-23T14:04:39+01:00 - Antigravity: Reconciled `main` index onto `origin/main` (`5954dfd`), normalized permissions, restored `v2.5.0` history/docs, updated `CONTRIBUTORS*.md`, `CHANGELOG.md`, `README*.md`, `CLAUDE.md`, and `docs/future-architecture.md` for `v2.6.0` release prep. (in-progress)
+- 2026-11-23T13:37:42+01:00 - Antigravity: Expanded deterministic mechanical tests (`test-lint-handoff.sh` 10 cases, `run-tests.sh` 33 cases, `install-rollback-test.sh` 8 checks, `hook-guard-tests.sh` 11 blocks, Markdown link/`+x` integrity check -> 10-step CI) and added opt-in local live eval harness `evals/run-live-evals.py`. (done)
+- 2026-11-23T13:26:52+01:00 - Antigravity: Added first-class Antigravity IDE / App 2.0 / `agy` support, hardened `parse-ownership.py` path/alias normalization, made `lang.sh` sandbox-friendly, moved install backups to `skills-backups/`, and added `hook-guard.py` + `examples/hooks/`. (done)
+- 2026-08-19T18:22:00+02:00 - Gemini CLI: Generated local project knowledge graph via graphify (`graphify-out/`) and verified mechanical + language suites. (done)
+- 2026-07-21T13:52:15+02:00 - Codex: Published `v2.5.0` as Latest GitHub Release on commit `f5e9024`, updated About metadata with Grok Build and Gemini/Antigravity CLI, and pushed `5954dfd` to `origin/main` with green CI (`shellcheck`, Ubuntu, macOS). (done)
+- 2026-05-24T23:48:00+02:00 - Gemini CLI: Resolved ShellCheck SC2295/SC1090 warnings in `lang.sh` and `lang-tests.sh`, committed `v2.4.0` (`e4b85fe` / `7a14464`), pushed to `main`, and synced local installs. (done)
+- 2026-05-21T23:32:08+02:00 - v2.3.0 / v2.4.0 transitions & multi-CLI sync (summarized): Codex/Claude/Gemini landed `v2.3.0` (`1f5f198`, Plan C Python `parse-ownership.py`, CI matrix, atomic rollback, `lint-handoff.py`), `brainplan.md` non-code workflows, and `v2.4.0` Language Preference (`lang.sh`). (done)
